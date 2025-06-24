@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./fstmon-bin --iface enp5s0 --listen 0.0.0.0:3200

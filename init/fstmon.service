@@ -1,0 +1,14 @@
+[Unit]
+Description=fstmon - api mon for homepage: https://gethomepage.dev
+After=network.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+Type=simple
+ExecStart=/root/fstmon/start
+RestartSec=10
+KillSignal=SIGQUIT
+
+[Install]
+WantedBy=multi-user.target
