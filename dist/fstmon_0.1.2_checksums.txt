@@ -1,3 +1,0 @@
-55a8f0b34025c1c4e2bd769b491619d387d8589d86e9b5434de8e508216a0aa4  fstmon_Linux_arm64.tar.gz
-d69cef394732be74201124d9b15f480c9288d2af5c11cc59b07a3064a796c4fd  fstmon_Linux_i386.tar.gz
-77f9ebda580701db43ac724fcefe672aae3d6d94954cbaeacbc31ac84efa25e4  fstmon_Linux_x86_64.tar.gz
