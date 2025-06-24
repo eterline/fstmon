@@ -17,7 +17,7 @@ builds:
     - "-w"
 
 
-    main: ./cmd/fstmon
+    main: ./cmd/fstmon/main.go
     binary: fstmon-bin
 
 archives:
