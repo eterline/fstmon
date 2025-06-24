@@ -1,0 +1,51 @@
+package config
+
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/alexflint/go-arg"
+)
+
+type Configuration struct {
+	Debug bool `arg:"--debug" help:"allow debug logging level"`
+
+	Listen     string `arg:"--listen" help:"Server listen address"`
+	CrtFileSSL string `arg:"--certfile,env:CERT" help:"Server SSL certificate file"`
+	KeyFileSSL string `arg:"--keyfile,env:KEY" help:"Server SSL key file"`
+
+	AllowedSubnets string `arg:"--subnets" help:"Server allowed source subnets"`
+	Interface      string `arg:"--iface" help:"Network counter interface"`
+}
+
+var (
+	parserConfig = arg.Config{
+		Program:           selfExec(),
+		IgnoreEnv:         false,
+		IgnoreDefault:     false,
+		StrictSubcommands: true,
+	}
+)
+
+func ParseArgs(c *Configuration) error {
+	p, err := arg.NewParser(parserConfig, c)
+	if err != nil {
+		return err
+	}
+
+	err = p.Parse(os.Args[1:])
+	if err == arg.ErrHelp {
+		p.WriteHelp(os.Stdout)
+		os.Exit(1)
+	}
+	return err
+}
+
+func selfExec() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "monita"
+	}
+
+	return filepath.Base(exePath)
+}
