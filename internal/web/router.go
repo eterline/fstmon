@@ -13,7 +13,7 @@ import (
 func RegisterRouter(cfg config.Configuration) http.Handler {
 
 	hCtrl := controller.NewHostController(
-		hostinfo.InitHostInfo(cfg.Interface),
+		hostinfo.InitHostInfo(),
 	)
 
 	root := chi.NewMux()
@@ -25,11 +25,9 @@ func RegisterRouter(cfg config.Configuration) http.Handler {
 		middleware.SecureControl,
 		middleware.SourceSubnetsAllow(cfg.AllowedSubnets),
 	).Route("/api", func(r chi.Router) {
-
 		r.Get("/net", hCtrl.HandleNetworking)
 		r.Get("/sys", hCtrl.HandleSys)
-		r.Get("/proc", hCtrl.HandleSys)
-
+		r.Get("/parts", hCtrl.HandleParts)
 	})
 
 	return root

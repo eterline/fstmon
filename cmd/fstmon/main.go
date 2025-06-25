@@ -14,7 +14,6 @@ var (
 		CrtFileSSL:     "",
 		KeyFileSSL:     "",
 		AllowedSubnets: "",
-		Interface:      "",
 	}
 )
 

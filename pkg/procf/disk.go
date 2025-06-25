@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,11 @@ type Partition struct {
 	FsType     string          `json:"fs_type"`
 	Opts       []string        `json:"opts"`
 	Usage      *PartitionUsage `json:"usage,omitempty"`
+}
+
+func (p Partition) Name() string {
+	_, file := filepath.Split(p.Device)
+	return file
 }
 
 /*

@@ -1,4 +1,5 @@
 fstmon
+tester
 !cmd/*
 ./dist
 dist

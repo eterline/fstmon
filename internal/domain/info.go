@@ -9,9 +9,24 @@ type SystemData struct {
 
 type ProcessesData struct{}
 
-type NetworkingData struct {
-	FullRX  string `json:"full_rx"`
-	FullTX  string `json:"full_tx"`
-	SpeedRX string `json:"speed_rx"`
-	SpeedTX string `json:"speed_tx"`
-}
+type (
+	InterfacesData map[string]NetworkingData
+
+	NetworkingData struct {
+		FullRX  string `json:"full_rx"`
+		FullTX  string `json:"full_tx"`
+		SpeedRX string `json:"speed_rx"`
+		SpeedTX string `json:"speed_tx"`
+	}
+)
+
+type (
+	PartsUsages map[string]PartUse
+
+	PartUse struct {
+		Name    string `json:"name"`
+		Size    string `json:"size"`
+		Use     string `json:"use"`
+		Percent int32  `json:"percent"`
+	}
+)

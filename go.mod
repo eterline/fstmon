@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	github.com/alexflint/go-arg v1.5.1
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -23,4 +24,5 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/sys v0.28.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

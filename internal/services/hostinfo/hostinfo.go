@@ -2,26 +2,20 @@ package hostinfo
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
+	"github.com/eterline/fstmon/internal/utils/output"
 	"github.com/eterline/fstmon/pkg/procf"
 	pscpu "github.com/shirou/gopsutil/v4/cpu"
 	psmem "github.com/shirou/gopsutil/v4/mem"
-	psnet "github.com/shirou/gopsutil/v4/net"
 )
 
-type HostInfo struct {
-	measureIface string
-}
+type HostInfo struct{}
 
-func InitHostInfo(iface string) *HostInfo {
-	return &HostInfo{
-		measureIface: iface,
-	}
+func InitHostInfo() *HostInfo {
+	return &HostInfo{}
 }
 
 func (hi *HostInfo) System(ctx context.Context) (domain.SystemData, error) {
@@ -47,9 +41,9 @@ func (hi *HostInfo) System(ctx context.Context) (domain.SystemData, error) {
 	}
 
 	data := domain.SystemData{
-		CpuTemp: fmt.Sprintf("%.1f°C", temp),
-		Uptime:  formatTime(uptime.Uptime),
-		Cpu:     fmt.Sprintf("%.0f%%", avgFloat64(loads)),
+		CpuTemp: output.CelsiusString(temp),
+		Uptime:  output.FmtTime(uptime.Uptime),
+		Cpu:     fmt.Sprintf("%.0f%%", output.AverageFloat(loads)),
 		Memory:  fmt.Sprintf("%.0f%%", stat.UsedPercent),
 	}
 
@@ -60,10 +54,10 @@ func (hi *HostInfo) Processes(ctx context.Context) (domain.ProcessesData, error)
 	return domain.ProcessesData{}, nil
 }
 
-func (hi *HostInfo) Networking(ctx context.Context) (domain.NetworkingData, error) {
-	data := domain.NetworkingData{}
+func (hi *HostInfo) Networking(ctx context.Context) (domain.InterfacesData, error) {
+	data := domain.InterfacesData{}
 
-	err := calcRxTx(ctx, hi.measureIface, &data)
+	err := calcRxTx(ctx, &data)
 	if err != nil {
 		return data, err
 	}
@@ -71,156 +65,30 @@ func (hi *HostInfo) Networking(ctx context.Context) (domain.NetworkingData, erro
 	return data, nil
 }
 
-func cpuTemperature(ctx context.Context) (float64, error) {
+func (hi *HostInfo) PartUse(ctx context.Context) (domain.PartsUsages, error) {
 
-	data, err := procf.Temperatures(ctx)
+	partArr, err := procf.FetchPartitions()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	count := 0
-	temp := float64(0)
-	contains := func(value string) bool {
-		return strings.Contains(value, "coretemp") ||
-			strings.Contains(value, "k10temp")
+	useMap := domain.PartsUsages{}
+
+	for _, use := range extractUsage(partArr.Main) {
+		useMap[use.Name] = use
 	}
 
-	for key, value := range data {
-		if !contains(key) {
-			continue
-		}
-		count++
-		temp += value.Current
+	for _, use := range extractUsage(partArr.LoopBack) {
+		useMap[use.Name] = use
 	}
 
-	if count == 0 {
-		return 0, nil
+	for _, use := range extractUsage(partArr.Mount) {
+		useMap[use.Name] = use
 	}
 
-	return (temp / float64(count)), nil
-}
-
-func calcRxTx(ctx context.Context, iface string, data *domain.NetworkingData) error {
-
-	counters1, err := psnet.IOCounters(true)
-	if err != nil {
-		return err
+	for _, use := range extractUsage(partArr.Docker) {
+		useMap[use.Name] = use
 	}
 
-	var rx1, tx1 uint64
-	found := false
-	for _, c := range counters1 {
-		if c.Name == iface {
-			rx1 = c.BytesRecv
-			tx1 = c.BytesSent
-			found = true
-			break
-		}
-	}
-	if !found {
-		*data = domain.NetworkingData{
-			FullRX:  "null",
-			FullTX:  "null",
-			SpeedRX: "null",
-			SpeedTX: "null",
-		}
-		return nil
-	}
-
-	select {
-	case <-ctx.Done():
-		return errors.New("measurement cancelled by context")
-	case <-time.After(1 * time.Second):
-
-	}
-
-	counters2, err := psnet.IOCounters(true)
-	if err != nil {
-		return err
-	}
-
-	var rx2, tx2 uint64
-	found = false
-	for _, c := range counters2 {
-		if c.Name == iface {
-			rx2 = c.BytesRecv
-			tx2 = c.BytesSent
-			found = true
-			break
-		}
-	}
-	if !found {
-		return errors.New("interface not found on second read: " + iface)
-	}
-
-	data.FullRX = bytesString(int64(rx2))
-	data.FullTX = bytesString(int64(tx2))
-	data.SpeedRX = bytesStringSpeed(int64(rx2 - rx1))
-	data.SpeedTX = bytesStringSpeed(int64(tx2 - tx1))
-
-	return nil
-}
-
-func bytesString(v int64) string {
-	const (
-		_          = iota
-		KB float64 = 1 << (10 * iota)
-		MB
-		GB
-		TB
-	)
-
-	fv := float64(v)
-
-	switch {
-	case fv >= TB:
-		return fmt.Sprintf("%.2fTB", fv/TB)
-	case fv >= GB:
-		return fmt.Sprintf("%.2fGB", fv/GB)
-	case fv >= MB:
-		return fmt.Sprintf("%.2fMB", fv/MB)
-	case fv >= KB:
-		return fmt.Sprintf("%.2fKB", fv/KB)
-	default:
-		return fmt.Sprintf("%dB", v)
-	}
-}
-
-func avgFloat64(l []float64) float64 {
-	len := len(l)
-	if len == 0 {
-		return 0.0
-	}
-
-	sum := float64(0)
-	for _, v := range l {
-		sum += v
-	}
-	return sum / float64(len)
-}
-
-func bytesStringSpeed(v int64) string {
-	return bytesString(v) + "/s"
-}
-
-func formatTime(t time.Duration) string {
-	seconds := int(t.Seconds())
-
-	h := seconds / 3600
-	m := (seconds % 3600) / 60
-	s := seconds % 60
-
-	res := ""
-
-	if h > 0 {
-		res += fmt.Sprintf("%dh", h)
-	}
-	if m > 0 {
-		res += fmt.Sprintf("%dm", m)
-	}
-	if s > 0 || res == "" {
-		res += fmt.Sprintf("%ds", s)
-	}
-
-	return res
+	return useMap, nil
 }
