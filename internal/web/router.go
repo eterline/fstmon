@@ -28,6 +28,7 @@ func RegisterRouter(cfg config.Configuration) http.Handler {
 		r.Get("/net", hCtrl.HandleNetworking)
 		r.Get("/sys", hCtrl.HandleSys)
 		r.Get("/parts", hCtrl.HandleParts)
+		r.Get("/avgload", hCtrl.HandleAvgload)
 	})
 
 	return root

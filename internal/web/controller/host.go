@@ -12,7 +12,8 @@ type HostDataProvider interface {
 	Networking(context.Context) (domain.InterfacesData, error)
 	Processes(context.Context) (domain.ProcessesData, error)
 	System(context.Context) (domain.SystemData, error)
-	PartUse(ctx context.Context) (domain.PartsUsages, error)
+	PartUse(context.Context) (domain.PartsUsages, error)
+	AverageLoad() (domain.AverageLoad, error)
 }
 
 type HostController struct {
@@ -62,6 +63,21 @@ func (hc *HostController) HandleParts(w http.ResponseWriter, r *http.Request) {
 		ResponseError(
 			w, http.StatusNotImplemented,
 			"could not fetch parts info",
+		)
+		slog.ErrorContext(r.Context(), err.Error())
+		return
+	}
+
+	ResponseOK(w, data)
+}
+
+func (hc *HostController) HandleAvgload(w http.ResponseWriter, r *http.Request) {
+
+	data, err := hc.hostData.AverageLoad()
+	if err != nil {
+		ResponseError(
+			w, http.StatusNotImplemented,
+			"could not fetch avg load",
 		)
 		slog.ErrorContext(r.Context(), err.Error())
 		return

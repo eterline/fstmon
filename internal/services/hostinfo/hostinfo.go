@@ -92,3 +92,25 @@ func (hi *HostInfo) PartUse(ctx context.Context) (domain.PartsUsages, error) {
 
 	return useMap, nil
 }
+
+func (hi *HostInfo) AverageLoad() (domain.AverageLoad, error) {
+
+	res := domain.AverageLoad{
+		Load1:  0.0,
+		Load5:  0.0,
+		Load15: 0.0,
+		Procs:  "0/0",
+	}
+
+	data, err := procf.FetchProcLoadAvg()
+	if err == nil {
+		res = domain.AverageLoad{
+			Load1:  data.Load1,
+			Load5:  data.Load5,
+			Load15: data.Load15,
+			Procs:  data.RunningProcs,
+		}
+	}
+
+	return res, nil
+}

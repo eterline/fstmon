@@ -7,6 +7,13 @@ type SystemData struct {
 	Memory  string `json:"memory"`
 }
 
+type AverageLoad struct {
+	Load1  float64 `json:"load_1"`
+	Load5  float64 `json:"load_5"`
+	Load15 float64 `json:"load_15"`
+	Procs  string  `json:"procs"`
+}
+
 type ProcessesData struct{}
 
 type (
