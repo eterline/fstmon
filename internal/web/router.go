@@ -17,18 +17,21 @@ func RegisterRouter(cfg config.Configuration) http.Handler {
 	)
 
 	root := chi.NewMux()
-
-	root.With(
+	root.Use(
 		middleware.RequestWrapper,
 		middleware.RequestLogger,
 		middleware.NoCacheControl,
 		middleware.SecureControl,
 		middleware.SourceSubnetsAllow(cfg.AllowedSubnets),
-	).Route("/api", func(r chi.Router) {
+		middleware.BearerCheck(cfg.AuthToken),
+	)
+
+	root.Route("/api", func(r chi.Router) {
 		r.Get("/net", hCtrl.HandleNetworking)
 		r.Get("/sys", hCtrl.HandleSys)
 		r.Get("/parts", hCtrl.HandleParts)
 		r.Get("/avgload", hCtrl.HandleAvgload)
+		r.Get("/temp", hCtrl.HandleTemp)
 	})
 
 	return root

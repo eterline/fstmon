@@ -37,3 +37,5 @@ type (
 		Percent int32  `json:"percent"`
 	}
 )
+
+type TemperatureMap map[string]float64

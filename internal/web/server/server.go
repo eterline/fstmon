@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 )
 
@@ -49,10 +50,22 @@ func NewServer(mux http.Handler) *Server {
 
 func (s *Server) Run(addr, key, crt string) error {
 	s.srv.Addr = addr
+	var err error = nil
+
 	if key == "" || crt == "" {
-		return s.srv.ListenAndServe()
+		err = s.srv.ListenAndServe()
+	} else {
+		err = s.srv.ListenAndServeTLS(crt, key)
 	}
-	return s.srv.ListenAndServeTLS(crt, key)
+
+	switch {
+	case err == http.ErrServerClosed:
+		return nil
+	case err == nil:
+		return nil
+	default:
+		return fmt.Errorf("server error: %w", err)
+	}
 }
 
 func (s *Server) Close() error {

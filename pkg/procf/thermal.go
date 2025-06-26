@@ -71,7 +71,7 @@ func extractThermalValues(data map[string]interface{}) map[string]ThermalValue {
 			for k, v2 := range val {
 				k = strings.ToLower(k)
 				k = strings.ReplaceAll(k, " ", "-")
-				walk(prefix+"."+k, v2)
+				walk(prefix+"_"+k, v2)
 			}
 		}
 	}

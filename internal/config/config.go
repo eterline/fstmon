@@ -15,6 +15,7 @@ type Configuration struct {
 	KeyFileSSL string `arg:"--keyfile,env:KEY" help:"Server SSL key file"`
 
 	AllowedSubnets string `arg:"--subnets" help:"Server allowed source subnets"`
+	AuthToken      string `arg:"--token" help:"Server auth token string"`
 }
 
 var (

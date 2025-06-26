@@ -114,3 +114,18 @@ func (hi *HostInfo) AverageLoad() (domain.AverageLoad, error) {
 
 	return res, nil
 }
+
+func (hi *HostInfo) TemperatureMap(ctx context.Context) (domain.TemperatureMap, error) {
+
+	data, err := procf.Temperatures(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	temps := make(domain.TemperatureMap, len(data))
+	for name, values := range data {
+		temps[name] = values.Current
+	}
+
+	return temps, nil
+}

@@ -14,6 +14,7 @@ type HostDataProvider interface {
 	System(context.Context) (domain.SystemData, error)
 	PartUse(context.Context) (domain.PartsUsages, error)
 	AverageLoad() (domain.AverageLoad, error)
+	TemperatureMap(context.Context) (domain.TemperatureMap, error)
 }
 
 type HostController struct {
@@ -78,6 +79,21 @@ func (hc *HostController) HandleAvgload(w http.ResponseWriter, r *http.Request) 
 		ResponseError(
 			w, http.StatusNotImplemented,
 			"could not fetch avg load",
+		)
+		slog.ErrorContext(r.Context(), err.Error())
+		return
+	}
+
+	ResponseOK(w, data)
+}
+
+func (hc *HostController) HandleTemp(w http.ResponseWriter, r *http.Request) {
+
+	data, err := hc.hostData.TemperatureMap(r.Context())
+	if err != nil {
+		ResponseError(
+			w, http.StatusNotImplemented,
+			"could not fetch temperature sensors data",
 		)
 		slog.ErrorContext(r.Context(), err.Error())
 		return

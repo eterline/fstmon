@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"log/slog"
 	"net"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
@@ -88,4 +90,44 @@ func SourceSubnetsAllow(cidr string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func BearerCheck(bearer string) func(http.Handler) http.Handler {
+
+	if bearer == "" {
+		return emptyToken
+	}
+
+	expected := []byte(bearer)
+	bearerReg := regexp.MustCompile(`^Bearer:\s*(.+)`)
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			authHeader := r.Header.Get("Authorization")
+
+			if matches := bearerReg.FindStringSubmatch(authHeader); matches != nil {
+				token := matches[1]
+				if subtle.ConstantTimeCompare([]byte(token), expected) == 1 {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			slog.WarnContext(r.Context(),
+				"invalid request token",
+				"auth_header",
+				authHeader,
+			)
+
+			controller.ResponseError(w, http.StatusForbidden, "invalid token")
+		})
+	}
+}
+
+func emptyToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		slog.InfoContext(r.Context(), "auth disabled")
+		next.ServeHTTP(w, r)
+	})
 }

@@ -79,7 +79,7 @@ func calcRxTx(ctx context.Context, data *domain.InterfacesData) error {
 		dataTmp[counter.Name] = domain.NetworkingData{
 			FullRX:  output.SizeString(counter2.BytesRecv),
 			FullTX:  output.SizeString(counter2.BytesSent),
-			SpeedRX: output.SpeedString(counter2.BytesSent - counter.BytesSent),
+			SpeedRX: output.SpeedString(counter2.BytesRecv - counter.BytesRecv),
 			SpeedTX: output.SpeedString(counter2.BytesSent - counter.BytesSent),
 		}
 	}
