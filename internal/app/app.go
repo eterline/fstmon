@@ -23,6 +23,7 @@ func Execute(root *toolkit.AppStarter, cfg config.Configuration) {
 		err := srv.Run(cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
 		if err != nil {
 			slog.Error(err.Error())
+			root.StopApp()
 		}
 	}()
 
