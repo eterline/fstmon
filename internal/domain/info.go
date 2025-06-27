@@ -39,3 +39,14 @@ type (
 )
 
 type TemperatureMap map[string]float64
+
+type (
+	CoreLoad struct {
+		Average float64   `json:"average"`
+		Cores   []float64 `json:"cores"`
+	}
+
+	CpuLoad struct {
+		Frames map[string]CoreLoad `json:"frames"`
+	}
+)

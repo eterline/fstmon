@@ -14,6 +14,7 @@ type Configuration struct {
 	CrtFileSSL string `arg:"--certfile,env:CERT" help:"Server SSL certificate file"`
 	KeyFileSSL string `arg:"--keyfile,env:KEY" help:"Server SSL key file"`
 
+	AllowedHosts   string `arg:"--sni" help:"Server allowed request hosts"`
 	AllowedSubnets string `arg:"--subnets" help:"Server allowed source subnets"`
 	AuthToken      string `arg:"--token" help:"Server auth token string"`
 }

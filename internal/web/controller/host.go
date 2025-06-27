@@ -17,13 +17,19 @@ type HostDataProvider interface {
 	TemperatureMap(context.Context) (domain.TemperatureMap, error)
 }
 
-type HostController struct {
-	hostData HostDataProvider
+type CpuProvider interface {
+	CpuLoad() (domain.CpuLoad, error)
 }
 
-func NewHostController(hdp HostDataProvider) *HostController {
+type HostController struct {
+	hostData HostDataProvider
+	cpuData  CpuProvider
+}
+
+func NewHostController(hdp HostDataProvider, cp CpuProvider) *HostController {
 	return &HostController{
 		hostData: hdp,
+		cpuData:  cp,
 	}
 }
 
@@ -94,6 +100,21 @@ func (hc *HostController) HandleTemp(w http.ResponseWriter, r *http.Request) {
 		ResponseError(
 			w, http.StatusNotImplemented,
 			"could not fetch temperature sensors data",
+		)
+		slog.ErrorContext(r.Context(), err.Error())
+		return
+	}
+
+	ResponseOK(w, data)
+}
+
+func (hc *HostController) HandleCpu(w http.ResponseWriter, r *http.Request) {
+
+	data, err := hc.cpuData.CpuLoad()
+	if err != nil {
+		ResponseError(
+			w, http.StatusNotImplemented,
+			"could not fetch cpu data",
 		)
 		slog.ErrorContext(r.Context(), err.Error())
 		return

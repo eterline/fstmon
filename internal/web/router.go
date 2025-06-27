@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/eterline/fstmon/internal/config"
@@ -10,29 +11,41 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func RegisterRouter(cfg config.Configuration) http.Handler {
+func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler {
 
 	hCtrl := controller.NewHostController(
 		hostinfo.InitHostInfo(),
+		hostinfo.InitCpuLoader(ctx),
 	)
 
 	root := chi.NewMux()
+
 	root.Use(
 		middleware.RequestWrapper,
 		middleware.RequestLogger,
 		middleware.NoCacheControl,
 		middleware.SecureControl,
-		middleware.SourceSubnetsAllow(cfg.AllowedSubnets),
-		middleware.BearerCheck(cfg.AuthToken),
 	)
 
-	root.Route("/api", func(r chi.Router) {
-		r.Get("/net", hCtrl.HandleNetworking)
-		r.Get("/sys", hCtrl.HandleSys)
-		r.Get("/parts", hCtrl.HandleParts)
-		r.Get("/avgload", hCtrl.HandleAvgload)
-		r.Get("/temp", hCtrl.HandleTemp)
-	})
+	root.NotFound(controller.NotFound)
+	root.MethodNotAllowed(controller.BadMethod)
+
+	root.Get("/info", controller.HandleInfo)
+
+	root.With(
+		middleware.SourceSubnetsAllow(cfg.AllowedSubnets),
+		middleware.AllowedHosts(cfg.AllowedHosts),
+		middleware.BearerCheck(cfg.AuthToken),
+	).Route(
+		"/api", func(r chi.Router) {
+			r.Get("/net", hCtrl.HandleNetworking)
+			r.Get("/sys", hCtrl.HandleSys)
+			r.Get("/parts", hCtrl.HandleParts)
+			r.Get("/avgload", hCtrl.HandleAvgload)
+			r.Get("/temp", hCtrl.HandleTemp)
+			r.Get("/cpu", hCtrl.HandleCpu)
+		},
+	)
 
 	return root
 }

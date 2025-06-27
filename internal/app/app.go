@@ -14,7 +14,8 @@ func Execute(root *toolkit.AppStarter, cfg config.Configuration) {
 	slog.Info("app started")
 	defer slog.Info("app closed")
 
-	srv := server.NewServer(web.RegisterRouter(cfg))
+	routes := web.RegisterRouter(root.Context, cfg)
+	srv := server.NewServer(routes)
 	defer srv.Close()
 
 	slog.Info("staring server", "address", cfg.Listen)

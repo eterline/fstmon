@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/services/ipfilter"
+	"github.com/eterline/fstmon/internal/services/secure"
 	"github.com/eterline/fstmon/internal/web/controller"
 )
 
@@ -72,18 +72,36 @@ func SecureControl(next http.Handler) http.Handler {
 }
 
 func SourceSubnetsAllow(cidr string) func(http.Handler) http.Handler {
-	filter := ipfilter.InitIpFilter(cidr)
+	filter := secure.InitIpFilter(cidr)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip, _, err := net.SplitHostPort(r.RemoteAddr)
 			if err != nil {
+				slog.ErrorContext(r.Context(), err.Error())
 				controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
 				return
 			}
 
-			if !filter.InAllowedCIDR(ip) {
+			if !filter.InAllowedSubnets(ip) {
 				controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func AllowedHosts(host string) func(http.Handler) http.Handler {
+	filter := secure.InitAllowedHostsFilter(host)
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			host, _, _ := net.SplitHostPort(r.Host)
+			if !filter.InAllowedHosts(host) {
+				controller.ResponseError(w, http.StatusForbidden, "forbidden: invalid host")
 				return
 			}
 
