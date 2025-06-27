@@ -84,6 +84,7 @@ func SourceSubnetsAllow(cidr string) func(http.Handler) http.Handler {
 			}
 
 			if !filter.InAllowedSubnets(ip) {
+				slog.WarnContext(r.Context(), "invalid request source subnet")
 				controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
 				return
 			}
@@ -101,6 +102,11 @@ func AllowedHosts(host string) func(http.Handler) http.Handler {
 
 			host, _, _ := net.SplitHostPort(r.Host)
 			if !filter.InAllowedHosts(host) {
+				slog.WarnContext(r.Context(),
+					"invalid request host",
+					"request_host",
+					host,
+				)
 				controller.ResponseError(w, http.StatusForbidden, "forbidden: invalid host")
 				return
 			}
