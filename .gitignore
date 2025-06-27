@@ -3,5 +3,5 @@ tester
 !cmd/*
 ./dist
 dist
-./certs/*
-!./certs/.keep
+certs/*
+!certs/.keep
