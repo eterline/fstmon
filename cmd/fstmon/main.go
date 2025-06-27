@@ -13,8 +13,8 @@ var (
 		Listen:         ":8100",
 		CrtFileSSL:     "",
 		KeyFileSSL:     "",
-		AllowedSubnets: "",
-		AllowedHosts:   "",
+		AllowedSubnets: []string{},
+		AllowedHosts:   []string{},
 		AuthToken:      "",
 	}
 )

@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/services/hostinfo"
@@ -33,8 +34,8 @@ func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler 
 	root.Get("/info", controller.HandleInfo)
 
 	root.With(
-		middleware.SourceSubnetsAllow(cfg.AllowedSubnets),
-		middleware.AllowedHosts(cfg.AllowedHosts),
+		middleware.SourceSubnetsAllow(strings.Join(cfg.AllowedSubnets, " ")),
+		middleware.AllowedHosts(strings.Join(cfg.AllowedHosts, " ")),
 		middleware.BearerCheck(cfg.AuthToken),
 	).Route(
 		"/api", func(r chi.Router) {
