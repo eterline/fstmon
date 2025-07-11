@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -30,6 +31,17 @@ func SizeString(v uint64) string {
 	default:
 		return fmt.Sprintf("%dB", v)
 	}
+}
+
+func UsageSizes(use, total uint64) string {
+	str := strings.Builder{}
+	str.Grow(3)
+
+	str.WriteString(SizeString(use))
+	str.WriteString("/")
+	str.WriteString(SizeString(total))
+
+	return str.String()
 }
 
 type Float interface {
@@ -62,19 +74,19 @@ func FmtTime(t time.Duration) string {
 	m := (seconds % 3600) / 60
 	s := seconds % 60
 
-	res := ""
+	res := strings.Builder{}
 
 	if h > 0 {
-		res += fmt.Sprintf("%dh", h)
+		res.WriteString(fmt.Sprintf("%dh", h))
 	}
 	if m > 0 {
-		res += fmt.Sprintf("%dm", m)
+		res.WriteString(fmt.Sprintf("%dm", m))
 	}
-	if s > 0 || res == "" {
-		res += fmt.Sprintf("%ds", s)
+	if s > 0 || res.String() == "" {
+		res.WriteString(fmt.Sprintf("%ds", s))
 	}
 
-	return res
+	return res.String()
 }
 
 func CelsiusString(temp float64) string {
@@ -83,4 +95,8 @@ func CelsiusString(temp float64) string {
 	}
 
 	return strconv.FormatFloat(temp, 'f', 1, 64) + "°C"
+}
+
+func PercentString(v float64) string {
+	return strconv.Itoa(int(v)) + "%"
 }

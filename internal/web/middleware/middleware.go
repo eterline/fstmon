@@ -19,7 +19,6 @@ func RequestWrapper(next http.Handler) http.Handler {
 		info := domain.InitRequestInfo(r)
 
 		w.Header().Set("X-Request-Time", info.RequestTime.UTC().Format(time.RFC1123))
-		w.Header().Set("X-Request-ID", info.RequestID.String())
 
 		r = r.WithContext(info.ToContext(r.Context()))
 		next.ServeHTTP(w, r)

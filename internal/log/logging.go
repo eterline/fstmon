@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"reflect"
+	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
 )
@@ -23,21 +23,11 @@ func (mrw *MiddlewareWithReqInfoWrapping) Enabled(ctx context.Context, rec slog.
 
 func (mrw *MiddlewareWithReqInfoWrapping) Handle(ctx context.Context, rec slog.Record) error {
 	if c, ok := domain.RequestInfoFromContext(ctx); ok {
-		t := reflect.TypeOf(c)
-		v := reflect.ValueOf(c)
 
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			tag := field.Tag.Get("json")
-			if tag == "-" {
-				continue
-			}
-			if tag == "" {
-				tag = field.Name
-			}
-			value := v.Field(i).Interface()
+		rec.Add("request_time", c.RequestTime.Format(time.RFC3339))
 
-			rec.Add(tag, value)
+		if c.SourceIP != "" {
+			rec.Add("source_ip", c.SourceIP)
 		}
 	}
 

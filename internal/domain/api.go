@@ -5,8 +5,6 @@ import (
 	"net"
 	"net/http"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type CtxKeyApi int
@@ -22,7 +20,6 @@ type ResponseAPI[T any] struct {
 }
 
 type RequestInfo struct {
-	RequestID   uuid.UUID `json:"request_id"`
 	RequestTime time.Time `json:"request_time"`
 	SourceIP    string    `json:"source_ip"`
 }
@@ -48,7 +45,6 @@ func InitRequestInfo(r *http.Request) RequestInfo {
 	}
 
 	return RequestInfo{
-		RequestID:   uuid.New(),
 		RequestTime: time.Now(),
 		SourceIP:    addr,
 	}

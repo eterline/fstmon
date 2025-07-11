@@ -26,6 +26,7 @@ func Execute(root *toolkit.AppStarter, cfg config.Configuration) {
 			slog.Error(err.Error())
 			root.StopApp()
 		}
+		slog.Info("server closed")
 	}()
 
 	root.Wait()

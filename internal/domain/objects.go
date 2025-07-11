@@ -1,10 +1,11 @@
 package domain
 
 type SystemData struct {
-	CpuTemp string `json:"cpu_temp"`
-	Uptime  string `json:"uptime"`
-	Cpu     string `json:"cpu"`
-	Memory  string `json:"memory"`
+	Cpu           float64 `json:"cpu"`
+	RAM           string  `json:"ram"`
+	RAMUsage      float64 `json:"ram_usage"`
+	Uptime        string  `json:"uptime"`
+	UptimeSeconds uint64  `json:"uptime_seconds"`
 }
 
 type AverageLoad struct {
@@ -13,8 +14,6 @@ type AverageLoad struct {
 	Load15 float64 `json:"load_15"`
 	Procs  string  `json:"procs"`
 }
-
-type ProcessesData struct{}
 
 type (
 	InterfacesData map[string]NetworkingData
@@ -41,12 +40,8 @@ type (
 type TemperatureMap map[string]float64
 
 type (
-	CoreLoad struct {
+	CpuLoad struct {
 		Average float64   `json:"average"`
 		Cores   []float64 `json:"cores"`
-	}
-
-	CpuLoad struct {
-		Frames map[string]CoreLoad `json:"frames"`
 	}
 )

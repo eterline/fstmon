@@ -1,41 +1,42 @@
 package controller
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
 	"github.com/eterline/fstmon/internal/domain"
 )
 
-type HostDataProvider interface {
-	Networking(context.Context) (domain.InterfacesData, error)
-	Processes(context.Context) (domain.ProcessesData, error)
-	System(context.Context) (domain.SystemData, error)
-	PartUse(context.Context) (domain.PartsUsages, error)
-	AverageLoad() (domain.AverageLoad, error)
-	TemperatureMap(context.Context) (domain.TemperatureMap, error)
-}
-
-type CpuProvider interface {
-	CpuLoad() (domain.CpuLoad, error)
-}
+type (
+	Fetcher[T any] interface {
+		Fetch() (T, error)
+	}
+)
 
 type HostController struct {
-	hostData HostDataProvider
-	cpuData  CpuProvider
+	system     Fetcher[domain.SystemData]
+	avgload    Fetcher[domain.AverageLoad]
+	partitions Fetcher[domain.PartsUsages]
+	network    Fetcher[domain.InterfacesData]
 }
 
-func NewHostController(hdp HostDataProvider, cp CpuProvider) *HostController {
+func NewHostController(
+	s Fetcher[domain.SystemData],
+	a Fetcher[domain.AverageLoad],
+	p Fetcher[domain.PartsUsages],
+	n Fetcher[domain.InterfacesData],
+) *HostController {
 	return &HostController{
-		hostData: hdp,
-		cpuData:  cp,
+		system:     s,
+		avgload:    a,
+		partitions: p,
+		network:    n,
 	}
 }
 
 func (hc *HostController) HandleNetworking(w http.ResponseWriter, r *http.Request) {
 
-	data, err := hc.hostData.Networking(r.Context())
+	data, err := hc.network.Fetch()
 	if err != nil {
 		ResponseError(
 			w, http.StatusNotImplemented,
@@ -48,9 +49,9 @@ func (hc *HostController) HandleNetworking(w http.ResponseWriter, r *http.Reques
 	ResponseOK(w, data)
 }
 
-func (hc *HostController) HandleSys(w http.ResponseWriter, r *http.Request) {
+func (hc *HostController) HandleSystem(w http.ResponseWriter, r *http.Request) {
 
-	data, err := hc.hostData.System(r.Context())
+	data, err := hc.system.Fetch()
 	if err != nil {
 		ResponseError(
 			w, http.StatusNotImplemented,
@@ -65,7 +66,7 @@ func (hc *HostController) HandleSys(w http.ResponseWriter, r *http.Request) {
 
 func (hc *HostController) HandleParts(w http.ResponseWriter, r *http.Request) {
 
-	data, err := hc.hostData.PartUse(r.Context())
+	data, err := hc.partitions.Fetch()
 	if err != nil {
 		ResponseError(
 			w, http.StatusNotImplemented,
@@ -80,41 +81,11 @@ func (hc *HostController) HandleParts(w http.ResponseWriter, r *http.Request) {
 
 func (hc *HostController) HandleAvgload(w http.ResponseWriter, r *http.Request) {
 
-	data, err := hc.hostData.AverageLoad()
+	data, err := hc.avgload.Fetch()
 	if err != nil {
 		ResponseError(
 			w, http.StatusNotImplemented,
 			"could not fetch avg load",
-		)
-		slog.ErrorContext(r.Context(), err.Error())
-		return
-	}
-
-	ResponseOK(w, data)
-}
-
-func (hc *HostController) HandleTemp(w http.ResponseWriter, r *http.Request) {
-
-	data, err := hc.hostData.TemperatureMap(r.Context())
-	if err != nil {
-		ResponseError(
-			w, http.StatusNotImplemented,
-			"could not fetch temperature sensors data",
-		)
-		slog.ErrorContext(r.Context(), err.Error())
-		return
-	}
-
-	ResponseOK(w, data)
-}
-
-func (hc *HostController) HandleCpu(w http.ResponseWriter, r *http.Request) {
-
-	data, err := hc.cpuData.CpuLoad()
-	if err != nil {
-		ResponseError(
-			w, http.StatusNotImplemented,
-			"could not fetch cpu data",
 		)
 		slog.ErrorContext(r.Context(), err.Error())
 		return

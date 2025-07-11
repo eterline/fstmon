@@ -9,18 +9,3 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 func BadMethod(w http.ResponseWriter, r *http.Request) {
 	ResponseError(w, http.StatusMethodNotAllowed, "unsupported method")
 }
-
-func HandleInfo(w http.ResponseWriter, r *http.Request) {
-
-	info := map[string]string{
-		"author":  "eterline",
-		"project": "",
-		"version": "0.6",
-	}
-
-	ResponseOK(w, info)
-}
-
-func RedirectStub(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/info", http.StatusTemporaryRedirect)
-}
