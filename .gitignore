@@ -5,3 +5,5 @@ tester
 dist
 certs/*
 !certs/.keep
+fstmon-app/*
+./fstmon-app

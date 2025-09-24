@@ -3,12 +3,12 @@ package web
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/services/hostfetchers"
 	"github.com/eterline/fstmon/internal/services/monitors"
+	"github.com/eterline/fstmon/internal/services/secure"
 	"github.com/eterline/fstmon/internal/web/controller"
 	"github.com/eterline/fstmon/internal/web/middleware"
 	"github.com/go-chi/chi/v5"
@@ -18,36 +18,39 @@ func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler 
 
 	root := chi.NewMux()
 
+	ext := secure.NewIpExtractor(cfg.ParseIpHeader)
+
 	root.Use(
-		middleware.RequestWrapper,
+		middleware.RequestWrapper(ext),
 		middleware.RequestLogger,
 		middleware.NoCacheControl,
 		middleware.SecureControl,
+		middleware.SourceSubnetsAllow(ctx, ext, cfg.AllowedSubnets),
+		middleware.AllowedHosts(cfg.AllowedHosts),
+		middleware.BearerCheck(cfg.AuthToken, ext),
 	)
 
 	root.NotFound(controller.NotFound)
 	root.MethodNotAllowed(controller.BadMethod)
 
-	root.With(
-		middleware.SourceSubnetsAllow(strings.Join(cfg.AllowedSubnets, " ")),
-		middleware.AllowedHosts(strings.Join(cfg.AllowedHosts, " ")),
-		middleware.BearerCheck(cfg.AuthToken),
-	).Route(
+	root.Route(
 		"/monitoring", func(r chi.Router) {
 
-			cpu5 := monitors.InitCpuLoadMon(ctx, 5*time.Second)
+			cpuMon := monitors.InitCpuLoadMon(ctx, 5*time.Second)
 
 			hc := controller.NewHostController(
-				hostfetchers.InitSystemMon(ctx, cpu5),
+				hostfetchers.InitSystemMon(ctx, cpuMon),
 				hostfetchers.InitAverageLoadMon(ctx),
 				hostfetchers.InitPartUseMon(ctx),
 				hostfetchers.InitNetworkMon(ctx),
+				hostfetchers.InitCpuFetch(cpuMon),
 			)
 
 			r.Get("/system", hc.HandleSystem)
 			r.Get("/avgload", hc.HandleAvgload)
 			r.Get("/parts", hc.HandleParts)
 			r.Get("/net", hc.HandleNetworking)
+			r.Get("/cpu", hc.HandleCpu)
 		},
 	)
 

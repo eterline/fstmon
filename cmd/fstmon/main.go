@@ -20,9 +20,6 @@ var (
 )
 
 func main() {
-
-	log.InitLogger(false)
-
 	root := toolkit.InitAppStart(
 		func() error {
 			err := config.ParseArgs(&cfg)
@@ -33,5 +30,6 @@ func main() {
 		},
 	)
 
+	log.InitLogger(cfg.Debug, cfg.JSONlog)
 	app.Execute(root, cfg)
 }

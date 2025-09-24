@@ -8,15 +8,17 @@ import (
 )
 
 type Configuration struct {
-	Debug bool `arg:"--debug" help:"allow debug logging level"`
+	Debug   bool `arg:"--debug" help:"Allow debug logging level"`
+	JSONlog bool `arg:"--log-json" help:"Set logs to JSON format"`
 
 	Listen     string `arg:"--listen" help:"Server listen address"`
 	CrtFileSSL string `arg:"--certfile,env:CERT" help:"Server SSL certificate file"`
 	KeyFileSSL string `arg:"--keyfile,env:KEY" help:"Server SSL key file"`
 
 	AllowedHosts   []string `arg:"--sni" help:"Server allowed request hosts"`
-	AllowedSubnets []string `arg:"--subnets" help:"Server allowed source subnets"`
+	AllowedSubnets []string `arg:"--subnets" help:"Server allowed source subnets/IPs"`
 	AuthToken      string   `arg:"--token" help:"Server auth token string"`
+	ParseIpHeader  bool     `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
 }
 
 var (

@@ -37,6 +37,6 @@ func ResponseError(w http.ResponseWriter, code int, message string) error {
 	return writeJSON(w, code, resp)
 }
 
-func ResponseInternalError(w http.ResponseWriter, err error) error {
-	return ResponseError(w, http.StatusInternalServerError, err.Error())
+func ResponseInternalError(w http.ResponseWriter) error {
+	return ResponseError(w, http.StatusInternalServerError, "internal server error")
 }

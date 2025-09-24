@@ -18,7 +18,7 @@ builds:
 
 
     main: ./cmd/fstmon/main.go
-    binary: fstmon-bin
+    binary: fstmon
 
 archives:
   - formats: [tar.gz]

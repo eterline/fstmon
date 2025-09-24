@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/subtle"
 	"log/slog"
 	"net"
@@ -13,16 +14,18 @@ import (
 	"github.com/eterline/fstmon/internal/web/controller"
 )
 
-func RequestWrapper(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		info := domain.InitRequestInfo(r)
+			info := domain.InitRequestInfo(r, ipExt)
 
-		w.Header().Set("X-Request-Time", info.RequestTime.UTC().Format(time.RFC1123))
+			w.Header().Set("X-Request-Time", time.Now().Format(time.RFC1123))
 
-		r = r.WithContext(info.ToContext(r.Context()))
-		next.ServeHTTP(w, r)
-	})
+			r = r.WithContext(info.ToContext(r.Context()))
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func RequestLogger(next http.Handler) http.Handler {
@@ -70,31 +73,33 @@ func SecureControl(next http.Handler) http.Handler {
 	})
 }
 
-func SourceSubnetsAllow(cidr string) func(http.Handler) http.Handler {
-	filter := secure.InitIpFilter(cidr)
+func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []string) func(http.Handler) http.Handler {
+	filter := secure.NewSubnetFilter(cidr)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+
+			ip, err := ipExt.ExtractIP(r)
 			if err != nil {
-				slog.ErrorContext(r.Context(), err.Error())
-				controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
+				slog.ErrorContext(r.Context(), "failed to parse request ip", "error", err.Error())
+				controller.ResponseInternalError(w)
 				return
 			}
 
-			if !filter.InAllowedSubnets(ip) {
-				slog.WarnContext(r.Context(), "invalid request source subnet")
-				controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
+			if filter.InAllowedSubnets(ip) {
+				slog.DebugContext(r.Context(), "request ip allowed", "ip", ip.String())
+				next.ServeHTTP(w, r)
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			slog.DebugContext(r.Context(), "request ip blocked", "ip", ip.String())
+			controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
 		})
 	}
 }
 
-func AllowedHosts(host string) func(http.Handler) http.Handler {
-	filter := secure.InitAllowedHostsFilter(host)
+func AllowedHosts(hosts []string) func(http.Handler) http.Handler {
+	filter := secure.InitAllowedHostsFilter(hosts...)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +120,7 @@ func AllowedHosts(host string) func(http.Handler) http.Handler {
 	}
 }
 
-func BearerCheck(bearer string) func(http.Handler) http.Handler {
+func BearerCheck(bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
 
 	if bearer == "" {
 		return emptyToken
@@ -149,8 +154,8 @@ func BearerCheck(bearer string) func(http.Handler) http.Handler {
 }
 
 func emptyToken(next http.Handler) http.Handler {
+	slog.Warn("auth disabled")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		slog.InfoContext(r.Context(), "auth disabled")
 		next.ServeHTTP(w, r)
 	})
 }

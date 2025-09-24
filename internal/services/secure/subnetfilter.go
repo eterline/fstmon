@@ -1,56 +1,43 @@
 package secure
 
 import (
-	"net"
+	"log/slog"
+	"net/netip"
 
-	"github.com/eterline/fstmon/internal/utils/stringuse"
+	"github.com/eterline/fstmon/pkg/netipuse"
 )
 
 type SubnetFilter struct {
-	arr []*net.IPNet
+	pool *netipuse.PoolIP
 }
 
-func InitIpFilter(cidr string) *SubnetFilter {
-	filterList := parseCIDRs(cidr)
-
-	return &SubnetFilter{
-		arr: filterList,
+func NewSubnetFilter(cidr []string) *SubnetFilter {
+	if len(cidr) < 1 {
+		return &SubnetFilter{}
 	}
-}
 
-func parseCIDRs(cidr string) []*net.IPNet {
-
-	list := make([]*net.IPNet, 0)
-
-	if parts, ok := stringuse.SplitBySpaces(cidr); ok {
-		for _, value := range parts {
-			_, net, err := net.ParseCIDR(value)
-			if err != nil {
-				continue
-			}
-			list = append(list, net)
+	pBuild := netipuse.NewPoolIPBuilder()
+	for _, sub := range cidr {
+		err := pBuild.AddPrefixParseSubnet(sub)
+		if err != nil {
+			slog.Info("invalid filter subnet", "err", err.Error())
 		}
 	}
 
-	return list
+	pool, err := pBuild.PoolIP()
+	if err != nil {
+		slog.Error("failed to init subnet filter", "err", err.Error())
+	}
+
+	slog.Warn("subnet filter enabled", "allow", pool.Prefixes())
+	return &SubnetFilter{
+		pool: pool,
+	}
 }
 
-func (f *SubnetFilter) InAllowedSubnets(ip string) bool {
-
-	if len(f.arr) == 0 {
+func (f *SubnetFilter) InAllowedSubnets(ip netip.Addr) bool {
+	if (f.pool == nil) || f.pool.Contains(ip) {
 		return true
 	}
-
-	ipEq := net.ParseIP(ip)
-	if ipEq == nil {
-		return false
-	}
-
-	for _, subnet := range f.arr {
-		if subnet.Contains(ipEq) {
-			return true
-		}
-	}
-
-	return false
+	return ip.IsLoopback()
 }

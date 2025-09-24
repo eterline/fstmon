@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"time"
+	"net/netip"
 )
 
 type CtxKeyApi int
@@ -13,6 +13,10 @@ const (
 	RequestInfoKey CtxKeyApi = iota
 )
 
+type IpExtractor interface {
+	ExtractIP(r *http.Request) (netip.Addr, error)
+}
+
 type ResponseAPI[T any] struct {
 	Code    int    `json:"code,omitempty"`
 	Data    T      `json:"data,omitempty"`
@@ -20,8 +24,8 @@ type ResponseAPI[T any] struct {
 }
 
 type RequestInfo struct {
-	RequestTime time.Time `json:"request_time"`
-	SourceIP    string    `json:"source_ip"`
+	SourceIP string `json:"source_ip"`
+	ClientIP string `json:"client_ip"`
 }
 
 func (i RequestInfo) IP() net.IP {
@@ -37,15 +41,14 @@ func RequestInfoFromContext(ctx context.Context) (RequestInfo, bool) {
 	return i, ok
 }
 
-func InitRequestInfo(r *http.Request) RequestInfo {
-
-	addr := r.Header.Get("X-Real-IP")
-	if addr == "" {
-		addr = r.RemoteAddr
+func InitRequestInfo(r *http.Request, ext IpExtractor) RequestInfo {
+	ip, err := ext.ExtractIP(r)
+	if err != nil {
+		panic(err)
 	}
 
 	return RequestInfo{
-		RequestTime: time.Now(),
-		SourceIP:    addr,
+		ClientIP: ip.String(),
+		SourceIP: r.RemoteAddr,
 	}
 }

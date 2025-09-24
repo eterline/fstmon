@@ -36,5 +36,11 @@ run: del build
 build-prod:
 	go build -ldflags="-s -w" -o ./$(app) -v ./cmd/$(app)/main.go
 
+pack: build-prod
+	rm -rf ./fstmon-app || echo ""
+	mkdir ./fstmon-app
+	cp init/fstmon.service ./fstmon-app/fstmon.service
+	mv ./fstmon ./fstmon-app/fstmon
+
 
 .DEFAULT_GOAL := run

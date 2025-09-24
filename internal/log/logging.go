@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
 )
@@ -23,11 +22,12 @@ func (mrw *MiddlewareWithReqInfoWrapping) Enabled(ctx context.Context, rec slog.
 
 func (mrw *MiddlewareWithReqInfoWrapping) Handle(ctx context.Context, rec slog.Record) error {
 	if c, ok := domain.RequestInfoFromContext(ctx); ok {
-
-		rec.Add("request_time", c.RequestTime.Format(time.RFC3339))
-
 		if c.SourceIP != "" {
 			rec.Add("source_ip", c.SourceIP)
+		}
+
+		if c.ClientIP != "" {
+			rec.Add("client_ip", c.ClientIP)
 		}
 	}
 
@@ -42,13 +42,24 @@ func (mrw *MiddlewareWithReqInfoWrapping) WithGroup(name string) slog.Handler {
 	return &MiddlewareWithReqInfoWrapping{next: mrw.next.WithGroup(name)}
 }
 
-func InitLogger(debug bool) {
+func InitLogger(debug, json bool) {
 	var h slog.Handler
+	opt := &slog.HandlerOptions{}
 
 	if debug {
+		opt.Level = slog.LevelDebug
+
+		opt = &slog.HandlerOptions{Level: slog.LevelDebug}
 		h = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
 	} else {
+		opt.Level = slog.LevelInfo
 		h = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	}
+
+	if json {
+		h = slog.NewJSONHandler(os.Stdout, opt)
+	} else {
+		h = slog.NewTextHandler(os.Stdout, opt)
 	}
 
 	h = NewLoggerWithReqInfoWrapping(h)
