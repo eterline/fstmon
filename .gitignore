@@ -1,10 +1,5 @@
-fstmon
-tester
-!cmd/*
-./dist
-dist
-certs/*
-!certs/.keep
-fstmon-app/*
-./fstmon-app
-./build/*
+/dist
+/build
+/certs/*
+!/certs/.keep
+/set_lic.sh
