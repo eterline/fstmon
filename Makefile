@@ -12,8 +12,7 @@ tidy:
 	go clean
 
 del:
-	rm ./$(app)* || echo "file didn't exists"
-	rm ./trace*  || echo "file didn't exists"
+	rm ./build/$(app)* || echo "file didn't exists"
 
 # ========= Compile commands =========
 
@@ -28,19 +27,13 @@ run-test: del build-test
 build:
 	GOOS=linux
 	GOARCH=amd64
-	go build -o ./$(app) -v ./cmd/$(app)/main.go
+	go build -o ./build/$(app) -v ./cmd/$(app)/main.go
 
 run: del build
-	./$(app)
+	./build/$(app)
 
 build-prod:
-	go build -ldflags="-s -w" -o ./$(app) -v ./cmd/$(app)/main.go
-
-pack: build-prod
-	rm -rf ./fstmon-app || echo ""
-	mkdir ./fstmon-app
-	cp init/fstmon.service ./fstmon-app/fstmon.service
-	mv ./fstmon ./fstmon-app/fstmon
+	go build -ldflags="-s -w" -o ./build/$(app) -v ./cmd/$(app)/main.go
 
 
 .DEFAULT_GOAL := run

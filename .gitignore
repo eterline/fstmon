@@ -7,3 +7,4 @@ certs/*
 !certs/.keep
 fstmon-app/*
 ./fstmon-app
+./build/*
