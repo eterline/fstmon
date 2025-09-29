@@ -11,19 +11,31 @@ import (
 	"github.com/alexflint/go-arg"
 )
 
-type Configuration struct {
-	Debug   bool `arg:"--debug" help:"Allow debug logging level"`
-	JSONlog bool `arg:"--log-json" help:"Set logs to JSON format"`
+type (
+	Log struct {
+		Debug   bool `arg:"--debug,-d" help:"Allow debug logging level"`
+		JSONlog bool `arg:"--log-json,-j" help:"Set logs to JSON format"`
+	}
 
-	Listen     string `arg:"--listen" help:"Server listen address"`
-	CrtFileSSL string `arg:"--certfile,env:CERT" help:"Server SSL certificate file"`
-	KeyFileSSL string `arg:"--keyfile,env:KEY" help:"Server SSL key file"`
+	Server struct {
+		Listen     string `arg:"--listen,-l" help:"Server listen address"`
+		CrtFileSSL string `arg:"--certfile,-c,env:CERT" help:"Server SSL certificate file"`
+		KeyFileSSL string `arg:"--keyfile,-k,env:KEY" help:"Server SSL key file"`
+	}
 
-	AllowedHosts   []string `arg:"--sni" help:"Server allowed request hosts"`
-	AllowedSubnets []string `arg:"--subnets" help:"Server allowed source subnets/IPs"`
-	AuthToken      string   `arg:"--token" help:"Server auth token string"`
-	ParseIpHeader  bool     `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
-}
+	Secure struct {
+		AllowedHosts   []string `arg:"--sni,-h" help:"Server allowed request hosts"`
+		AllowedSubnets []string `arg:"--subnets,-s" help:"Server allowed source subnets/IPs"`
+		AuthToken      string   `arg:"--token,-t,env:TOKEN" help:"Server auth token string"`
+		ParseIpHeader  bool     `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
+	}
+
+	Configuration struct {
+		Log
+		Server
+		Secure
+	}
+)
 
 var (
 	parserConfig = arg.Config{

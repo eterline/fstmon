@@ -13,13 +13,20 @@ import (
 
 var (
 	cfg = config.Configuration{
-		Debug:          false,
-		Listen:         ":8100",
-		CrtFileSSL:     "",
-		KeyFileSSL:     "",
-		AllowedSubnets: []string{},
-		AllowedHosts:   []string{},
-		AuthToken:      "",
+		Log: config.Log{
+			Debug:   false,
+			JSONlog: true,
+		},
+		Server: config.Server{
+			Listen:     ":3000",
+			CrtFileSSL: "",
+			KeyFileSSL: "",
+		},
+		Secure: config.Secure{
+			AllowedSubnets: []string{},
+			AllowedHosts:   []string{},
+			AuthToken:      "",
+		},
 	}
 )
 

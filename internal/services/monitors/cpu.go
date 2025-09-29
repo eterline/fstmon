@@ -24,6 +24,10 @@ type CpuLoadMonitoring struct {
 
 func InitCpuLoadMon(ctx context.Context, poolDur time.Duration) *CpuLoadMonitoring {
 	self := new(CpuLoadMonitoring)
+	self.data = domain.CpuLoad{
+		Average: 0.0,
+		Cores:   []domain.CpuCore{},
+	}
 	go self.updates(ctx, poolDur)
 	return self
 }

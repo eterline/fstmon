@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -99,7 +100,8 @@ func InitAppStart(preInitFunc func() error) *AppStarter {
 func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *AppStarter {
 
 	if err := preInitFunc(); err != nil {
-		panic("app starting fatal error: " + err.Error())
+		fmt.Printf("app starting fatal error: %v", err)
+		os.Exit(1)
 	}
 
 	rootContext, stopFunc := signal.NotifyContext(
