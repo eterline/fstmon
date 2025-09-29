@@ -15,7 +15,7 @@ var (
 	cfg = config.Configuration{
 		Log: config.Log{
 			Debug:   false,
-			JSONlog: true,
+			JSONlog: false,
 		},
 		Server: config.Server{
 			Listen:     ":3000",
