@@ -1,0 +1,41 @@
+name: Deploy monitoring service
+on:
+    push:
+        branches:
+            - main
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: 1.25.1
+
+            - name: Build go microservice
+              run: go build -ldflags="-s -w" -v ./...
+
+            - name: Copy bin to server working folder
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: ./fstmon
+                  target: /opt/fstmon-app/fstmon-new
+
+            - name: Deploy on server and run service
+              uses: appleboy/ssh-action@v1.1.0
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      systemctl stop fstmon.service || true
+                      cd /opt/fstmon-app
+                      mv fstmon-new fstmon
+                      systemctl start fstmon.service
