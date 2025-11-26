@@ -22,13 +22,13 @@ type CpuLoadMonitoring struct {
 	err  process.ErrorHolder
 }
 
-func InitCpuLoadMon(ctx context.Context, poolDur time.Duration) *CpuLoadMonitoring {
+func InitCpuLoadMon(ctx context.Context, loopDuration time.Duration) *CpuLoadMonitoring {
 	self := new(CpuLoadMonitoring)
 	self.data = domain.CpuLoad{
 		Average: 0.0,
 		Cores:   []domain.CpuCore{},
 	}
-	go self.updates(ctx, poolDur)
+	go self.updates(ctx, loopDuration)
 	return self
 }
 

@@ -7,9 +7,9 @@ package web
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/eterline/fstmon/internal/config"
+	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/internal/services/hostfetchers"
 	"github.com/eterline/fstmon/internal/services/monitors"
 	"github.com/eterline/fstmon/internal/services/secure"
@@ -19,19 +19,39 @@ import (
 )
 
 func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler {
+	log := log.MustLoggerFromContext(ctx)
 
-	root := chi.NewMux()
+	log.Info(
+		"starting monitoring loop",
+		"cpu", cfg.CpuDuration(),
+		"system", cfg.SystemDuration(),
+		"avgload", cfg.AvgloadDuration(),
+		"partitions", cfg.PartitionsDuration(),
+		"network", cfg.NetworkDuration(),
+	)
+
+	cpuMon := monitors.InitCpuLoadMon(ctx, cfg.CpuDuration())
+
+	hc := controller.NewHostController(
+		hostfetchers.InitSystemMon(ctx, cpuMon, cfg.SystemDuration()),
+		hostfetchers.InitAverageLoadMon(ctx, cfg.AvgloadDuration()),
+		hostfetchers.InitPartUseMon(ctx, cfg.PartitionsDuration()),
+		hostfetchers.InitNetworkMon(ctx, cfg.NetworkDuration()),
+		hostfetchers.InitCpuFetch(cpuMon),
+	)
 
 	ext := secure.NewIpExtractor(cfg.ParseIpHeader)
 
+	root := chi.NewMux()
+
 	root.Use(
 		middleware.RequestWrapper(ext),
-		middleware.RequestLogger,
+		middleware.RequestLogger(log),
 		middleware.NoCacheControl,
 		middleware.SecureControl,
 		middleware.SourceSubnetsAllow(ctx, ext, cfg.AllowedSubnets),
 		middleware.AllowedHosts(cfg.AllowedHosts),
-		middleware.BearerCheck(cfg.AuthToken, ext),
+		middleware.BearerCheck(ctx, cfg.AuthToken, ext),
 	)
 
 	root.NotFound(controller.NotFound)
@@ -39,16 +59,6 @@ func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler 
 
 	root.Route(
 		"/monitoring", func(r chi.Router) {
-
-			cpuMon := monitors.InitCpuLoadMon(ctx, 5*time.Second)
-
-			hc := controller.NewHostController(
-				hostfetchers.InitSystemMon(ctx, cpuMon),
-				hostfetchers.InitAverageLoadMon(ctx),
-				hostfetchers.InitPartUseMon(ctx),
-				hostfetchers.InitNetworkMon(ctx),
-				hostfetchers.InitCpuFetch(cpuMon),
-			)
 
 			r.Get("/system", hc.HandleSystem)
 			r.Get("/avgload", hc.HandleAvgload)

@@ -19,18 +19,13 @@ type AverageLoadMon struct {
 	err  error
 }
 
-func InitAverageLoadMon(ctx context.Context) *AverageLoadMon {
+func InitAverageLoadMon(ctx context.Context, poolDuration time.Duration) *AverageLoadMon {
 	self := new(AverageLoadMon)
-	go self.updates(ctx)
+	go self.updates(ctx, poolDuration)
 	return self
 }
 
-func (mon *AverageLoadMon) updates(ctx context.Context) {
-
-	const (
-		poolDur = 15 * time.Second
-	)
-
+func (mon *AverageLoadMon) updates(ctx context.Context, poolDuration time.Duration) {
 	var update = func() {
 		mon.mu.Lock()
 
@@ -50,7 +45,7 @@ func (mon *AverageLoadMon) updates(ctx context.Context) {
 		mon.mu.Unlock()
 	}
 
-	tm := time.NewTicker(poolDur)
+	tm := time.NewTicker(poolDuration)
 	defer tm.Stop()
 	update()
 

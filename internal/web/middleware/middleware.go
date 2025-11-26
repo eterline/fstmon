@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
+	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/internal/services/secure"
 	"github.com/eterline/fstmon/internal/web/controller"
 )
@@ -32,17 +33,19 @@ func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
 	}
 }
 
-func RequestLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequestLogger(logger *slog.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		slog.DebugContext(
-			r.Context(), "api request",
-			"path", r.RequestURI,
-			"method", r.Method,
-		)
+			logger.DebugContext(
+				r.Context(), "api request",
+				"path", r.RequestURI,
+				"method", r.Method,
+			)
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func NoCacheControl(next http.Handler) http.Handler {
@@ -124,10 +127,17 @@ func AllowedHosts(hosts []string) func(http.Handler) http.Handler {
 	}
 }
 
-func BearerCheck(bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
+func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
+
+	log := log.MustLoggerFromContext(ctx)
 
 	if bearer == "" {
-		return emptyToken
+		return func(next http.Handler) http.Handler {
+			log.Warn("auth disabled")
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next.ServeHTTP(w, r)
+			})
+		}
 	}
 
 	expected := []byte(bearer)
@@ -146,7 +156,7 @@ func BearerCheck(bearer string, ipExt domain.IpExtractor) func(http.Handler) htt
 				}
 			}
 
-			slog.WarnContext(r.Context(),
+			log.WarnContext(r.Context(),
 				"invalid request token",
 				"auth_header",
 				authHeader,
@@ -155,11 +165,4 @@ func BearerCheck(bearer string, ipExt domain.IpExtractor) func(http.Handler) htt
 			controller.ResponseError(w, http.StatusForbidden, "invalid token")
 		})
 	}
-}
-
-func emptyToken(next http.Handler) http.Handler {
-	slog.Warn("auth disabled")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
-	})
 }

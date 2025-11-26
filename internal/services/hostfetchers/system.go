@@ -25,18 +25,16 @@ type CpuDataExporter interface {
 	Data() (data domain.CpuLoad, err error)
 }
 
-func InitSystemMon(ctx context.Context, cpu CpuDataExporter) *SystemMon {
+func InitSystemMon(ctx context.Context, cpu CpuDataExporter, poolDuration time.Duration) *SystemMon {
 	self := new(SystemMon)
-	go self.updates(ctx, cpu)
+	go self.updates(ctx, cpu, poolDuration)
 	return self
 }
 
-func (mon *SystemMon) updates(ctx context.Context, cpu CpuDataExporter) {
-
-	const poolDur = 5 * time.Second
+func (mon *SystemMon) updates(ctx context.Context, cpu CpuDataExporter, poolDuration time.Duration) {
 	var loadCpu = float64(0.0)
 
-	tm := time.NewTicker(poolDur)
+	tm := time.NewTicker(poolDuration)
 	defer tm.Stop()
 
 	for {

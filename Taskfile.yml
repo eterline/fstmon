@@ -1,0 +1,21 @@
+version: '3'
+
+vars:
+    GO_FLAGS: "-s -w"
+    BINARY: "fstmon"
+
+tasks:
+
+    clean:
+        cmds:
+            - go mod tidy
+            - go clean
+
+    build:
+        cmds:
+            - |
+                GOOS=linux \
+                GOARCH=amd64 \
+                go build -trimpath -ldflags="{{.GO_FLAGS}}" \
+                -o "./{{.BINARY}}" \
+                -v "./cmd/fstmon/main.go"

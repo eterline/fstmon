@@ -5,33 +5,40 @@
 package app
 
 import (
-	"log/slog"
+	"os"
+	"time"
 
 	"github.com/eterline/fstmon/internal/config"
+	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/internal/web"
 	"github.com/eterline/fstmon/internal/web/server"
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
 
 func Execute(root *toolkit.AppStarter, cfg config.Configuration) {
+	log := log.MustLoggerFromContext(root.Context)
 
-	slog.Info("app started")
-	defer slog.Info("app closed")
+	log.Info("app started")
+	defer func() {
+		log.Info("app closed", "working_time", root.WorkTime())
+	}()
 
 	routes := web.RegisterRouter(root.Context, cfg)
 	srv := server.NewServer(routes)
 	defer srv.Close()
 
-	slog.Info("staring server", "address", cfg.Listen)
-
+	root.NewThread()
 	go func() {
-		err := srv.Run(cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
+		defer root.DoneThread()
+		err := srv.Run(root.Context, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
 		if err != nil {
-			slog.Error(err.Error())
+			log.Error("server exited with error", "error", err)
 			root.StopApp()
 		}
-		slog.Info("server closed")
 	}()
 
-	root.Wait()
+	if err := root.WaitThreads(5 * time.Second); err != nil {
+		log.Warn("force exit")
+		os.Exit(1)
+	}
 }

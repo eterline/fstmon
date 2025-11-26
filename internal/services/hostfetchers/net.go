@@ -20,19 +20,15 @@ type NetworkMon struct {
 	err  error
 }
 
-func InitNetworkMon(ctx context.Context) *NetworkMon {
+func InitNetworkMon(ctx context.Context, poolDuration time.Duration) *NetworkMon {
 	self := new(NetworkMon)
-	go self.updates(ctx)
+	go self.updates(ctx, poolDuration)
 	return self
 }
 
-func (mon *NetworkMon) updates(ctx context.Context) {
+func (mon *NetworkMon) updates(ctx context.Context, poolDuration time.Duration) {
 
-	const (
-		poolDur = 5 * time.Second
-	)
-
-	tm := time.NewTicker(poolDur)
+	tm := time.NewTicker(poolDuration)
 	defer tm.Stop()
 
 	for {
@@ -44,7 +40,7 @@ func (mon *NetworkMon) updates(ctx context.Context) {
 			return
 		}
 
-		tm.Reset(poolDur)
+		tm.Reset(poolDuration)
 
 		select {
 		case <-ctx.Done():
@@ -66,7 +62,7 @@ func (mon *NetworkMon) updates(ctx context.Context) {
 
 			if cntr1, ok := findCounter(cntr2.Name, stat1); ok {
 
-				rx, tx := netSpeed(cntr1, cntr2, poolDur)
+				rx, tx := netSpeed(cntr1, cntr2, poolDuration)
 
 				mon.data[cntr2.Name] = domain.NetworkingData{
 					FullRX:  output.SizeString(cntr2.BytesRecv),

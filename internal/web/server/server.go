@@ -5,9 +5,12 @@
 package server
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"net/http"
+	"time"
 
+	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/pkg/cert"
 )
 
@@ -25,26 +28,60 @@ func NewServer(mux http.Handler) *Server {
 	}
 }
 
-func (s *Server) Run(addr, key, crt string) error {
+func (s *Server) Run(ctx context.Context, addr, key, crt string) error {
+	logger := log.MustLoggerFromContext(ctx)
+	logger = logger.With("listen", addr)
+
 	s.srv.Addr = addr
-	var err error = nil
 
-	if key == "" || crt == "" {
-		err = s.srv.ListenAndServe()
-	} else {
-		err = s.srv.ListenAndServeTLS(crt, key)
-	}
+	tlsEnabled := !(key == "" || crt == "")
+	logger = logger.With("tls", tlsEnabled)
 
-	switch {
-	case err == http.ErrServerClosed:
+	errCh := make(chan error, 1)
+
+	go func() {
+		var err error
+
+		if tlsEnabled {
+			logger.Info("starting server", "crt", crt, "key", key)
+			err = s.srv.ListenAndServeTLS(crt, key)
+		} else {
+			logger.Info("starting server")
+			err = s.srv.ListenAndServe()
+		}
+
+		errCh <- err
+	}()
+
+	// --- WAIT FOR STOP ---
+	select {
+	case <-ctx.Done():
+		logger.Info("shutdown signal received")
+
+		shCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := s.srv.Shutdown(shCtx); err != nil {
+			logger.Error("shutdown error", "error", err)
+			return err
+		}
+
+		logger.Info("server stopped gracefully")
 		return nil
-	case err == nil:
-		return nil
-	default:
-		return fmt.Errorf("server error: %w", err)
+
+	case err := <-errCh:
+		if errors.Is(err, http.ErrServerClosed) {
+			logger.Info("server closed normally")
+			return nil
+		}
+
+		logger.Error("server error", "error", err)
+		return err
 	}
 }
 
 func (s *Server) Close() error {
-	return s.srv.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return s.srv.Shutdown(ctx)
 }

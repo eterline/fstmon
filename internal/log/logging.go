@@ -46,20 +46,19 @@ func (mrw *MiddlewareWithReqInfoWrapping) WithGroup(name string) slog.Handler {
 	return &MiddlewareWithReqInfoWrapping{next: mrw.next.WithGroup(name)}
 }
 
-func InitLogger(debug, json bool) {
-	var h slog.Handler
-	opt := &slog.HandlerOptions{}
+// InitLogger - create singletone style structure logger
+func InitLogger(level string, json bool) {
+	logger := NewLogger(level, json)
+	slog.SetDefault(logger)
+}
 
-	if debug {
-		opt.Level = slog.LevelDebug
-
-		opt = &slog.HandlerOptions{Level: slog.LevelDebug}
-		h = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
-	} else {
-		opt.Level = slog.LevelInfo
-		h = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+// InitLogger - create new structure logger
+func NewLogger(level string, json bool) *slog.Logger {
+	opt := &slog.HandlerOptions{
+		Level: selectLogLevel(level),
 	}
 
+	var h slog.Handler
 	if json {
 		h = slog.NewJSONHandler(os.Stdout, opt)
 	} else {
@@ -68,6 +67,50 @@ func InitLogger(debug, json bool) {
 
 	h = NewLoggerWithReqInfoWrapping(h)
 
-	logger := slog.New(h)
-	slog.SetDefault(logger)
+	return slog.New(h)
+}
+
+// Uses only for context
+type loggerContextKey int
+
+const (
+	loggerCtxKey loggerContextKey = iota
+)
+
+// WrapLoggerToContext - wrap logger to parent context
+func WrapLoggerToContext(ctx context.Context, logger *slog.Logger) context.Context {
+	return context.WithValue(ctx, loggerCtxKey, logger)
+}
+
+// LoggerFromContext - unwrap logger from context
+func LoggerFromContext(ctx context.Context) (logger *slog.Logger, ok bool) {
+	l, ok := ctx.Value(loggerCtxKey).(*slog.Logger)
+	if ok {
+		return l, true
+	}
+	return nil, false
+}
+
+// MustLoggerFromContext - unwrap logger from context
+func MustLoggerFromContext(ctx context.Context) (logger *slog.Logger) {
+	l, ok := ctx.Value(loggerCtxKey).(*slog.Logger)
+	if ok {
+		return l
+	}
+	panic("Logger doesn't wrapped in this context.Context")
+}
+
+func selectLogLevel(level string) slog.Level {
+	switch level {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

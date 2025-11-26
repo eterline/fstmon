@@ -7,20 +7,59 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/alexflint/go-arg"
 )
 
+func clampSeconds(sec, min, max int) time.Duration {
+	if sec < min {
+		sec = min
+	}
+	if sec > max {
+		sec = max
+	}
+	return time.Duration(sec) * time.Second
+}
+
+type Monitor struct {
+	Cpu        int `arg:"--cpu-loop" help:"Cpu metric update loop seconds"`
+	Avgload    int `arg:"--avgload-loop" help:"Avgload update loop seconds"`
+	System     int `arg:"--system-loop" help:"System update loop seconds"`
+	Network    int `arg:"--network-loop" help:"Network update loop seconds"`
+	Partitions int `arg:"--partitions-loop" help:"Parttitions update loop seconds"`
+}
+
+func (m Monitor) CpuDuration() time.Duration {
+	return clampSeconds(m.Cpu, 5, 120)
+}
+
+func (m Monitor) AvgloadDuration() time.Duration {
+	return clampSeconds(m.Avgload, 10, 300)
+}
+
+func (m Monitor) SystemDuration() time.Duration {
+	return clampSeconds(m.Cpu, 30, 300)
+}
+
+func (m Monitor) NetworkDuration() time.Duration {
+	return clampSeconds(m.Cpu, 5, 120)
+}
+
+func (m Monitor) PartitionsDuration() time.Duration {
+	return clampSeconds(m.Cpu, 30, 120)
+}
+
 type (
 	Log struct {
-		Debug   bool `arg:"--debug,-d" help:"Allow debug logging level"`
-		JSONlog bool `arg:"--log-json,-j" help:"Set logs to JSON format"`
+		LogLevel string `arg:"--log-level" help:"Logging level: debug|info|warn|error"`
+		JSONlog  bool   `arg:"--log-json,-j" help:"Set logs to JSON format"`
 	}
 
 	Server struct {
 		Listen     string `arg:"--listen,-l" help:"Server listen address"`
-		CrtFileSSL string `arg:"--certfile,-c,env:CERT" help:"Server SSL certificate file"`
-		KeyFileSSL string `arg:"--keyfile,-k,env:KEY" help:"Server SSL key file"`
+		CrtFileSSL string `arg:"--certfile,-c" help:"Server SSL certificate file"`
+		KeyFileSSL string `arg:"--keyfile,-k" help:"Server SSL key file"`
 	}
 
 	Secure struct {
@@ -34,6 +73,7 @@ type (
 		Log
 		Server
 		Secure
+		Monitor
 	}
 )
 

@@ -5,6 +5,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/eterline/fstmon/internal/app"
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/log"
@@ -14,8 +16,8 @@ import (
 var (
 	cfg = config.Configuration{
 		Log: config.Log{
-			Debug:   false,
-			JSONlog: false,
+			LogLevel: "info",
+			JSONlog:  false,
 		},
 		Server: config.Server{
 			Listen:     ":3000",
@@ -26,6 +28,13 @@ var (
 			AllowedSubnets: []string{},
 			AllowedHosts:   []string{},
 			AuthToken:      "",
+		},
+		Monitor: config.Monitor{
+			Cpu:        5,
+			Avgload:    10,
+			System:     30,
+			Network:    5,
+			Partitions: 30,
 		},
 	}
 )
@@ -41,6 +50,13 @@ func main() {
 		},
 	)
 
-	log.InitLogger(cfg.Debug, cfg.JSONlog)
+	logger := log.NewLogger(cfg.LogLevel, cfg.JSONlog)
+
+	root.UseContextAdders(
+		func(ctx context.Context) context.Context {
+			return log.WrapLoggerToContext(ctx, logger)
+		},
+	)
+
 	app.Execute(root, cfg)
 }

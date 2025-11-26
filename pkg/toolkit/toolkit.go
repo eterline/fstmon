@@ -21,6 +21,7 @@ import (
 type AppStarter struct {
 	Context  context.Context
 	stopFunc context.CancelFunc
+	wTimer   WorkTimerCallback
 	wg       sync.WaitGroup
 }
 
@@ -54,7 +55,7 @@ func (s *AppStarter) DoneThread() {
 }
 
 // FinalThreads - wait for thread final or timeout exit
-func (s *AppStarter) WaitThreads(timeout time.Duration) {
+func (s *AppStarter) WaitThreads(timeout time.Duration) error {
 
 	s.Wait()
 
@@ -69,8 +70,15 @@ func (s *AppStarter) WaitThreads(timeout time.Duration) {
 	<-ctx.Done()
 
 	if err := ctx.Err(); err == context.DeadlineExceeded {
-		panic("app threads stop timeout")
+		return fmt.Errorf("app threads stop timeout: %w", err)
 	}
+
+	return nil
+}
+
+// FinalThreads - wait for thread final or timeout exit
+func (s *AppStarter) WorkTime() time.Duration {
+	return s.wTimer()
 }
 
 // AddValue - appends to context values with key
@@ -115,6 +123,7 @@ func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *App
 	return &AppStarter{
 		Context:  rootContext,
 		stopFunc: stopFunc,
+		wTimer:   WorkTimer(),
 	}
 }
 
@@ -153,3 +162,12 @@ func ObjectUUID(object any) (uuid.UUID, bool) {
 }
 
 // =================================
+
+type WorkTimerCallback func() time.Duration
+
+func WorkTimer() WorkTimerCallback {
+	start := time.Now()
+	return func() time.Duration {
+		return time.Since(start)
+	}
+}

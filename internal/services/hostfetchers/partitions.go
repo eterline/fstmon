@@ -20,18 +20,13 @@ type PartUseMon struct {
 	err  error
 }
 
-func InitPartUseMon(ctx context.Context) *PartUseMon {
+func InitPartUseMon(ctx context.Context, poolDuration time.Duration) *PartUseMon {
 	self := new(PartUseMon)
-	go self.updates(ctx)
+	go self.updates(ctx, poolDuration)
 	return self
 }
 
-func (mon *PartUseMon) updates(ctx context.Context) {
-
-	const (
-		poolDur = time.Minute
-	)
-
+func (mon *PartUseMon) updates(ctx context.Context, poolDuration time.Duration) {
 	var update = func() {
 		mon.mu.Lock()
 		partArr, err := procf.FetchPartitions()
@@ -63,7 +58,7 @@ func (mon *PartUseMon) updates(ctx context.Context) {
 		mon.mu.Unlock()
 	}
 
-	tm := time.NewTicker(poolDur)
+	tm := time.NewTicker(poolDuration)
 	defer tm.Stop()
 
 	update()
