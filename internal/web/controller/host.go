@@ -5,10 +5,12 @@
 package controller
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
 	"github.com/eterline/fstmon/internal/domain"
+	"github.com/eterline/fstmon/internal/log"
 )
 
 type (
@@ -18,6 +20,7 @@ type (
 )
 
 type HostController struct {
+	log        *slog.Logger
 	system     Fetcher[domain.SystemData]
 	avgload    Fetcher[domain.AverageLoad]
 	partitions Fetcher[domain.PartsUsages]
@@ -26,6 +29,7 @@ type HostController struct {
 }
 
 func NewHostController(
+	ctx context.Context,
 	s Fetcher[domain.SystemData],
 	a Fetcher[domain.AverageLoad],
 	p Fetcher[domain.PartsUsages],
@@ -33,6 +37,7 @@ func NewHostController(
 	c Fetcher[domain.CpuLoad],
 ) *HostController {
 	return &HostController{
+		log:        log.MustLoggerFromContext(ctx),
 		system:     s,
 		avgload:    a,
 		partitions: p,
@@ -49,7 +54,7 @@ func (hc *HostController) HandleNetworking(w http.ResponseWriter, r *http.Reques
 			w, http.StatusNotImplemented,
 			"could not fetch network counters",
 		)
-		slog.ErrorContext(r.Context(), err.Error())
+		hc.log.ErrorContext(r.Context(), err.Error())
 		return
 	}
 
@@ -64,7 +69,7 @@ func (hc *HostController) HandleSystem(w http.ResponseWriter, r *http.Request) {
 			w, http.StatusNotImplemented,
 			"could not fetch system info",
 		)
-		slog.ErrorContext(r.Context(), err.Error())
+		hc.log.ErrorContext(r.Context(), err.Error())
 		return
 	}
 
@@ -79,7 +84,7 @@ func (hc *HostController) HandleParts(w http.ResponseWriter, r *http.Request) {
 			w, http.StatusNotImplemented,
 			"could not fetch parts info",
 		)
-		slog.ErrorContext(r.Context(), err.Error())
+		hc.log.ErrorContext(r.Context(), err.Error())
 		return
 	}
 
@@ -94,7 +99,7 @@ func (hc *HostController) HandleAvgload(w http.ResponseWriter, r *http.Request) 
 			w, http.StatusNotImplemented,
 			"could not fetch avg load",
 		)
-		slog.ErrorContext(r.Context(), err.Error())
+		hc.log.ErrorContext(r.Context(), err.Error())
 		return
 	}
 
@@ -109,7 +114,7 @@ func (hc *HostController) HandleCpu(w http.ResponseWriter, r *http.Request) {
 			w, http.StatusNotImplemented,
 			"could not fetch cpu loads",
 		)
-		slog.ErrorContext(r.Context(), err.Error())
+		hc.log.ErrorContext(r.Context(), err.Error())
 		return
 	}
 

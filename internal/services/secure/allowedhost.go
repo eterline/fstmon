@@ -5,7 +5,6 @@
 package secure
 
 import (
-	"log/slog"
 	"strings"
 )
 
@@ -14,6 +13,10 @@ type AllowedHostsFilter struct {
 }
 
 func InitAllowedHostsFilter(host ...string) *AllowedHostsFilter {
+	if len(host) == 0 {
+		return nil
+	}
+
 	hosts := make(map[string]struct{}, len(host))
 	for _, h := range host {
 		hosts[strings.ToLower(h)] = struct{}{}
@@ -23,13 +26,10 @@ func InitAllowedHostsFilter(host ...string) *AllowedHostsFilter {
 		ahf: hosts,
 	}
 
-	if len(hosts) > 0 {
-		slog.Warn("host filter enabled", "allow", f.allowedHosts())
-	}
 	return f
 }
 
-func (f *AllowedHostsFilter) allowedHosts() []string {
+func (f *AllowedHostsFilter) AllowedHosts() []string {
 	a := make([]string, 0, len(f.ahf))
 	for host := range f.ahf {
 		a = append(a, host)
@@ -38,7 +38,7 @@ func (f *AllowedHostsFilter) allowedHosts() []string {
 }
 
 func (f *AllowedHostsFilter) InAllowedHosts(host string) bool {
-	if f.ahf != nil {
+	if f == nil {
 		return true
 	}
 	_, ok := f.ahf[strings.ToLower(host)]

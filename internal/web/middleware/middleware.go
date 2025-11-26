@@ -7,7 +7,6 @@ package middleware
 import (
 	"context"
 	"crypto/subtle"
-	"log/slog"
 	"net"
 	"net/http"
 	"regexp"
@@ -33,11 +32,13 @@ func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
 	}
 }
 
-func RequestLogger(logger *slog.Logger) func(next http.Handler) http.Handler {
+func RequestLogger(ctx context.Context) func(next http.Handler) http.Handler {
+	log := log.MustLoggerFromContext(ctx)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			logger.DebugContext(
+			log.DebugContext(
 				r.Context(), "api request",
 				"path", r.RequestURI,
 				"method", r.Method,
@@ -81,39 +82,53 @@ func SecureControl(next http.Handler) http.Handler {
 }
 
 func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []string) func(http.Handler) http.Handler {
-	filter := secure.NewSubnetFilter(cidr)
+	log := log.MustLoggerFromContext(ctx)
+
+	filter, err := secure.NewSubnetFilter(cidr)
+	if err != nil {
+		log.Warn("allowed subnets error", "error", err)
+	}
+
+	if s := filter.AllowedList(); len(s) != 0 {
+		log.Warn("setup allowed subnets", "subnets", filter.AllowedList())
+	}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			ip, err := ipExt.ExtractIP(r)
 			if err != nil {
-				slog.ErrorContext(r.Context(), "failed to parse request ip", "error", err.Error())
+				log.ErrorContext(r.Context(), "failed to parse request ip", "error", err.Error())
 				controller.ResponseInternalError(w)
 				return
 			}
 
 			if filter.InAllowedSubnets(ip) {
-				slog.DebugContext(r.Context(), "request ip allowed", "ip", ip.String())
+				log.DebugContext(r.Context(), "request ip allowed", "ip", ip.String())
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			slog.DebugContext(r.Context(), "request ip blocked", "ip", ip.String())
+			log.WarnContext(r.Context(), "request ip blocked", "ip", ip.String())
 			controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
 		})
 	}
 }
 
-func AllowedHosts(hosts []string) func(http.Handler) http.Handler {
+func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.Handler {
+	log := log.MustLoggerFromContext(ctx)
+
 	filter := secure.InitAllowedHostsFilter(hosts...)
+	if filter != nil {
+		log.Warn("setup allowed hosts", "hosts", filter.AllowedHosts())
+	}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			host, _, _ := net.SplitHostPort(r.Host)
 			if !filter.InAllowedHosts(host) {
-				slog.WarnContext(r.Context(),
+				log.WarnContext(r.Context(),
 					"invalid request host",
 					"request_host",
 					host,
@@ -128,7 +143,6 @@ func AllowedHosts(hosts []string) func(http.Handler) http.Handler {
 }
 
 func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
-
 	log := log.MustLoggerFromContext(ctx)
 
 	if bearer == "" {

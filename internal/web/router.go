@@ -33,6 +33,7 @@ func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler 
 	cpuMon := monitors.InitCpuLoadMon(ctx, cfg.CpuDuration())
 
 	hc := controller.NewHostController(
+		ctx,
 		hostfetchers.InitSystemMon(ctx, cpuMon, cfg.SystemDuration()),
 		hostfetchers.InitAverageLoadMon(ctx, cfg.AvgloadDuration()),
 		hostfetchers.InitPartUseMon(ctx, cfg.PartitionsDuration()),
@@ -46,11 +47,11 @@ func RegisterRouter(ctx context.Context, cfg config.Configuration) http.Handler 
 
 	root.Use(
 		middleware.RequestWrapper(ext),
-		middleware.RequestLogger(log),
+		middleware.RequestLogger(ctx),
 		middleware.NoCacheControl,
 		middleware.SecureControl,
 		middleware.SourceSubnetsAllow(ctx, ext, cfg.AllowedSubnets),
-		middleware.AllowedHosts(cfg.AllowedHosts),
+		middleware.AllowedHosts(ctx, cfg.AllowedHosts),
 		middleware.BearerCheck(ctx, cfg.AuthToken, ext),
 	)
 
