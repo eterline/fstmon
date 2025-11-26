@@ -15,10 +15,15 @@ import (
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
 
-func Execute(root *toolkit.AppStarter, cfg config.Configuration) {
+type InitFlags struct {
+	CommitHash string
+	Version    string
+}
+
+func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration) {
 	log := log.MustLoggerFromContext(root.Context)
 
-	log.Info("app started")
+	log.Info("app started", "commit", flags.CommitHash, "version", flags.Version)
 	defer func() {
 		log.Info("app closed", "working_time", root.WorkTime())
 	}()

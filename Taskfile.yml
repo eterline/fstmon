@@ -1,21 +1,37 @@
 version: '3'
 
 vars:
-    GO_FLAGS: "-s -w"
-    BINARY: "fstmon"
+    COMMIT_HASH:
+        sh: git rev-parse --short HEAD
+    VERSION:
+        sh: git describe --tags --abbrev=0
+
+    GO_FLAGS: "-s -w -X main.CommitHash={{.COMMIT_HASH}} -X main.Version={{.VERSION}}"
 
 tasks:
 
     clean:
+        desc: Cleaning golang packages
         cmds:
             - go mod tidy
             - go clean
 
     build:
+        desc: Develop test building
+        cmds:
+            - |
+                GOOS=linux \
+                GOARCH=amd64 \
+                go build -trimpath \
+                -o "./fstmon" \
+                -v "./cmd/fstmon/main.go"
+
+    build-prod:
+        desc: Production ready building
         cmds:
             - |
                 GOOS=linux \
                 GOARCH=amd64 \
                 go build -trimpath -ldflags="{{.GO_FLAGS}}" \
-                -o "./{{.BINARY}}" \
+                -o "./fstmon" \
                 -v "./cmd/fstmon/main.go"

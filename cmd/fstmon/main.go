@@ -13,7 +13,18 @@ import (
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
 
+// -ladflags variables
 var (
+	CommitHash = "dev"
+	Version    = "dev"
+)
+
+var (
+	Flags = app.InitFlags{
+		CommitHash: CommitHash,
+		Version:    Version,
+	}
+
 	cfg = config.Configuration{
 		Log: config.Log{
 			LogLevel: "info",
@@ -58,5 +69,5 @@ func main() {
 		},
 	)
 
-	app.Execute(root, cfg)
+	app.Execute(root, Flags, cfg)
 }
