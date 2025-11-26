@@ -11,35 +11,52 @@ Monitoing microservice for [homepage](https://gethomepage.dev) or another. Writt
 ## Build
 
 To build project in full prod variant
-```
-make build-prod
+```sh
+task build-prod
 ```
 
 for testing build
+```sh
+task build
 ```
-make build
-```
 
-All binariaes will be in './build' folder at repository
+## Arguments
 
+### Logging
 
-## Usage:
+| Option                  | Description                                     | Default |
+| ----------------------- | ----------------------------------------------- | ------- |
+| `--log-level LOG-LEVEL` | Logging level: `debug` `info`, `warn`, `error`  | `info`  |
+| `--log-json`, `-j`      | Set logs to JSON format                         | `false` |
 
-```bash
-Usage: fstmon [--debug] [--log-json] [--listen LISTEN] [--certfile CERTFILE] [--keyfile KEYFILE] [--sni SNI] [--subnets SUBNETS] [--token TOKEN] [--ip-header]
+### Server
 
-Options:
-  --debug, -d                      Allow debug logging level
-  --log-json, -j                   Set logs to JSON format
-  --listen LISTEN, -l LISTEN       Server listen address [default: :8100]
-  --certfile CERTFILE, -c CERTFILE Server SSL certificate file [env: CERT]
-  --keyfile KEYFILE, -k KEYFILE    Server SSL key file [env: KEY]
-  --sni SNI, -h SNI                Server allowed request hosts [default: []]
-  --subnets SUBNETS, -s SUBNETS    Server allowed source subnets/IPs [default: []]
-  --token TOKEN, -t TOKEN          Server auth token string [env: TOKEN]
-  --ip-header                      Enable parsing reverse proxy headers
-  --help, -h                       display this help and exit
-```
+| Option                               | Description                          | Default     |
+| ------------------------------------ | ------------------------------------ | ----------- |
+| `--listen LISTEN`, `-l LISTEN`       | Server listen address                | `:3000`     |
+| `--certfile CERTFILE`, `-c CERTFILE` | Server SSL certificate file          | —           |
+| `--keyfile KEYFILE`, `-k KEYFILE`    | Server SSL key file                  | —           |
+| `--sni SNI`                          | Server allowed request hosts         | `[]`        |
+| `--subnets SUBNETS`, `-s SUBNETS`    | Server allowed source subnets/IPs    | `[]`        |
+| `--token TOKEN`, `-t TOKEN`          | Server auth token string             | env `TOKEN` |
+| `--ip-header`                        | Enable parsing reverse proxy headers | `false`     |
+
+### Metric loops
+
+| Option                              | Description                      | Default |
+| ----------------------------------- | -------------------------------- | ------- |
+| `--cpu-loop CPU-LOOP`               | CPU metric update loop (seconds) | `5`     |
+| `--avgload-loop AVGLOAD-LOOP`       | Avgload update loop (seconds)    | `10`    |
+| `--system-loop SYSTEM-LOOP`         | System update loop (seconds)     | `30`    |
+| `--network-loop NETWORK-LOOP`       | Network update loop (seconds)    | `5`     |
+| `--partitions-loop PARTITIONS-LOOP` | Partitions update loop (seconds) | `30`    |
+
+### Help
+
+| Option         | Description                |
+| -------------- | -------------------------- |
+| `--help`, `-h` | Display this help and exit |
+
 
 ## Running
 
@@ -59,7 +76,7 @@ Homepage config:
                format: text
 ```
 
-    Another usage will be describe later
+Another usage will be describe later
 
 ## License
 
