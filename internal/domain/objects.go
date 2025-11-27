@@ -55,21 +55,6 @@ type (
 	}
 )
 
-type SlidingWindow[T any] struct {
-	DurationSec int `json:"window_sec"`
-	Values      []T `json:"values"`
-}
-
 type (
-	CpuCoreTimeline struct {
-		Load      SlidingWindow[float64] `json:"load"`
-		Frequency SlidingWindow[float64] `json:"frequency"`
-	}
-
-	CpuLoadTimeline struct {
-		Average SlidingWindow[float64] `json:"average"`
-		Cores   []CpuCoreTimeline      `json:"cores"`
-	}
-
 	RAMUsageTimeline SlidingWindow[float64]
 )

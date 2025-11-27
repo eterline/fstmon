@@ -144,10 +144,11 @@ func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.H
 
 func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
+	enableAuth := !(bearer == "")
+	log.Info("setup token auth policy", "auth_enabled", enableAuth)
 
-	if bearer == "" {
+	if !enableAuth {
 		return func(next http.Handler) http.Handler {
-			log.Warn("auth disabled")
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				next.ServeHTTP(w, r)
 			})
@@ -163,17 +164,17 @@ func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) f
 			authHeader := r.Header.Get("Authorization")
 
 			if matches := bearerReg.FindStringSubmatch(authHeader); matches != nil {
-				token := matches[1]
-				if subtle.ConstantTimeCompare([]byte(token), expected) == 1 {
+				token := []byte(matches[1])
+				if subtle.ConstantTimeCompare(token, expected) == 1 {
 					next.ServeHTTP(w, r)
 					return
 				}
 			}
 
-			log.WarnContext(r.Context(),
+			log.WarnContext(
+				r.Context(),
 				"invalid request token",
-				"auth_header",
-				authHeader,
+				"auth_header", authHeader,
 			)
 
 			controller.ResponseError(w, http.StatusForbidden, "invalid token")

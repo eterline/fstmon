@@ -52,6 +52,22 @@ type Float interface {
 	~float32 | ~float64
 }
 
+func AverageFloatArr[T any, F Float](l []T, c func(idx int) F) F {
+	len := len(l)
+
+	if len == 0 {
+		return 0.0
+	}
+
+	sum := F(0)
+
+	for i := 0; i < len; i++ {
+		sum += c(i)
+	}
+
+	return sum / F(len)
+}
+
 func AverageFloat[F Float](l []F) F {
 	len := len(l)
 	if len == 0 {

@@ -26,6 +26,11 @@ tasks:
                 -o "./fstmon" \
                 -v "./cmd/fstmon/main.go"
 
+    test:
+        desc: Develop test another building
+        cmds:
+            - go run ./cmd/fstmon-testing/main.go
+
     build-prod:
         desc: Production ready building
         cmds:

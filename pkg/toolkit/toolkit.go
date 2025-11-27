@@ -76,6 +76,8 @@ func (s *AppStarter) WaitThreads(timeout time.Duration) error {
 	return nil
 }
 
+// ============================
+
 // FinalThreads - wait for thread final or timeout exit
 func (s *AppStarter) WorkTime() time.Duration {
 	return s.wTimer()
@@ -108,7 +110,7 @@ func InitAppStart(preInitFunc func() error) *AppStarter {
 func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *AppStarter {
 
 	if err := preInitFunc(); err != nil {
-		fmt.Printf("app starting fatal error: %v", err)
+		fmt.Printf("app starting fatal error: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -123,7 +125,7 @@ func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *App
 	return &AppStarter{
 		Context:  rootContext,
 		stopFunc: stopFunc,
-		wTimer:   WorkTimer(),
+		wTimer:   WorkTimer(ctx),
 	}
 }
 
@@ -165,7 +167,7 @@ func ObjectUUID(object any) (uuid.UUID, bool) {
 
 type WorkTimerCallback func() time.Duration
 
-func WorkTimer() WorkTimerCallback {
+func WorkTimer(ctx context.Context) WorkTimerCallback {
 	start := time.Now()
 	return func() time.Duration {
 		return time.Since(start)
