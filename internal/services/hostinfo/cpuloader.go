@@ -84,21 +84,3 @@ func (ld *CpuLoader) monitoring(ctx context.Context) {
 		}()
 	}
 }
-
-// func (ld *CpuLoader) CpuLoad() (domain.CpuLoad, error) {
-// 	ld.mu.RLock()
-// 	defer ld.mu.RUnlock()
-
-// 	frames := make(map[string]domain.CoreLoad, len(ld.loadsMap))
-
-// 	for frame, load := range ld.loadsMap {
-// 		frames[frame.String()] = domain.CoreLoad{
-// 			Average: load.Average(),
-// 			Cores:   load.Cores,
-// 		}
-// 	}
-
-// 	return domain.CpuLoad{
-// 		Frames: frames,
-// 	}, nil
-// }
