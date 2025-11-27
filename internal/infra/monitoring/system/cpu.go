@@ -1,4 +1,4 @@
-package systemmonitor
+package system
 
 import (
 	"context"
@@ -47,7 +47,7 @@ CpuPackage - returns static CPU package information, including:
 
     Returns an error if fetching CPU info fails or no cores are detected.
 */
-func (hmc *hardwareMetricCPU) CpuPackage() (domain.CpuPackage, error) {
+func (hmc *hardwareMetricCPU) ScrapeCpuPackage() (domain.CpuPackage, error) {
 	info, err := procf.FetchCpuInfo()
 	if err != nil {
 		return domain.CpuPackage{}, err
@@ -93,7 +93,7 @@ CpuMetrics - returns dynamic CPU metrics, including:
     Returns an error if fetching CPU info or CPU load fails,
     or if the number of cores and load entries do not match.
 */
-func (hmc *hardwareMetricCPU) CpuMetrics(ctx context.Context) (domain.CpuMetrics, error) {
+func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.CpuMetrics, error) {
 	cpuInfo, err := pscpu.InfoWithContext(ctx)
 	if err != nil {
 		return domain.CpuMetrics{}, err
