@@ -2,6 +2,25 @@ package domain
 
 import "time"
 
+// Numerable is a constraint that matches all numeric types in Go.
+type Numerable interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64
+}
+
+func NewSpeedIO[T Numerable](rx, tx T) SpeedIO[T] {
+	return SpeedIO[T]{
+		RX: rx,
+		TX: tx,
+	}
+}
+
+type SpeedIO[T Numerable] struct {
+	RX T `json:"rx"`
+	TX T `json:"tx"`
+}
+
 // ============================ CPU domain structures ============================
 
 /*
@@ -57,14 +76,13 @@ NetworkingIO - instantaneous counters and speeds of a single
 	network interface, including received/sent bytes, packets, and errors.
 */
 type NetworkingIO struct {
-	BytesFullRX uint64 `json:"bytes_full_rx"` // Total bytes received
-	BytesFullTX uint64 `json:"bytes_full_tx"` // Total bytes sent
+	BytesFullRX uint64          `json:"bytes_full_rx"` // Total bytes received
+	BytesFullTX uint64          `json:"bytes_full_tx"` // Total bytes sent
+	BytesPerSec SpeedIO[uint64] `json:"bytes_per_sec"`
 
-	BytesSpeedRX uint64 `json:"bytes_speed_rx"` // RX speed in bytes per second
-	BytesSpeedTX uint64 `json:"bytes_speed_tx"` // TX speed in bytes per second
-
-	PacketsRx uint64 `json:"packets_rx"` // Total packets received
-	PacketsTx uint64 `json:"packets_tx"` // Total packets sent
+	PacketsRx     uint64          `json:"packets_rx"` // Total packets received
+	PacketsTx     uint64          `json:"packets_tx"` // Total packets sent
+	PacketsPerSec SpeedIO[uint64] `json:"packets_per_sec"`
 
 	ErrPacketsRx uint64 `json:"err_packets_rx"` // Total RX packet errors
 	ErrPacketsTx uint64 `json:"err_packets_tx"` // Total TX packet errors
@@ -78,17 +96,13 @@ type InterfacesIO map[string]NetworkingIO
 // ============================ System domain structures ============================
 
 type SystemInfo struct {
-	Uptime  time.Duration `json:"uptime"`
-	Idle    time.Duration `json:"idle"`
-	AvgLoad AvgLoad       `json:"average_load"`
-}
-
-type AvgLoad struct {
-	Load1        float64 `json:"load1"`         // 1-minute average load
-	Load5        float64 `json:"load5"`         // 5-minute average load
-	Load15       float64 `json:"load15"`        // 15-minute average load
-	RunningProcs int     `json:"running_procs"` // number of currently running processes
-	TotalProcs   int     `json:"total_procs"`   // total number of processes
+	Uptime       time.Duration `json:"uptime"`
+	Idle         time.Duration `json:"idle"`
+	Load1        float64       `json:"load1"`         // 1-minute average load
+	Load5        float64       `json:"load5"`         // 5-minute average load
+	Load15       float64       `json:"load15"`        // 15-minute average load
+	RunningProcs int           `json:"running_procs"` // number of currently running processes
+	TotalProcs   int           `json:"total_procs"`   // total number of processes
 }
 
 // =======
@@ -97,27 +111,30 @@ type AvgLoad struct {
 MemoryMetric - system memory metrics.
 */
 type MemoryMetrics struct {
-	Total       uint64  `json:"total"`        // total physical RAM (bytes)
-	Available   uint64  `json:"available"`    // memory available for allocation (bytes)
-	Used        uint64  `json:"used"`         // memory actively used by applications (bytes)
-	UsedPercent float64 `json:"used_percent"` // percentage of used memory
-	Free        uint64  `json:"free"`         // unallocated physical memory (bytes)
+	Total     uint64 `json:"total"`     // total physical RAM (bytes)
+	Available uint64 `json:"available"` // memory available for allocation (bytes)
+	Used      uint64 `json:"used"`      // memory actively used by applications (bytes)
+	Free      uint64 `json:"free"`      // unallocated physical memory (bytes)
 
-	SwapTotal uint64 `json:"swap_total"` // total swap space (bytes)
-	SwapUsed  uint64 `json:"swap_used"`  // used swap space (bytes)
-	SwapFree  uint64 `json:"swap_free"`  // free swap space (bytes)
+	SwapTotal     uint64 `json:"swap_total"`     // total swap space (bytes)
+	SwapAvailable uint64 `json:"swap_available"` // available swap space (bytes)
+	SwapUsed      uint64 `json:"swap_used"`      // used swap space (bytes)
+	SwapFree      uint64 `json:"swap_free"`      // free swap space (bytes)
+
+	UsedPercent     float64 `json:"used_percent"`      // percentage of used memory
+	SwapUsedPercent float64 `json:"swap_used_percent"` // percentage of used swap
 }
 
 // =======
 
 /*
 ThermalMetric - an instantaneous thermal state of a sensor.
-It includes current, minimum, and maximum observed temperatures.
+It includes current, critical, and maximum observed temperatures.
 */
 type ThermalMetrics struct {
 	Current float64 `json:"current"`
-	Minimum float64 `json:"minimum"`
-	Maximum float64 `json:"maximum"`
+	Max     float64 `json:"max"`
+	Crit    float64 `json:"crit"`
 }
 
 /*
@@ -133,16 +150,16 @@ PartitionInfo - static information about a filesystem partition.
 	These attributes describe the identity and configuration of the partition, and do not change over time.
 */
 type PartitionInfo struct {
-	Device     string   `json:"device"`      // Device path, e.g. "/dev/sda1"
-	MountPoint string   `json:"mount_point"` // Mount point, e.g. "/"
-	FsType     string   `json:"fs_type"`     // Filesystem type, e.g. "ext4"
-	Opts       []string `json:"opts"`        // Mount options
+	Device     string   `json:"device"`     // Device path, e.g. "/dev/sda1"
+	Mount      string   `json:"mount"`      // Mount point, e.g. "/"
+	Filesystem string   `json:"filesystem"` // Filesystem type, e.g. "ext4"
+	Options    []string `json:"options"`    // Mount options
 }
 
 /*
 PartitionsInfo - a map of mount point to static partition info.
 */
-type PartitionsInfo map[string]PartitionInfo
+type PartitionsInfo []PartitionInfo
 
 // =======
 
@@ -160,3 +177,9 @@ type PartitionMetrics struct {
 	InodesFree        uint64  `json:"inodes_free"`         // Free inodes
 	InodesUsedPercent float64 `json:"inodes_used_percent"` // Inode usage percentage
 }
+
+type PartitionMetricsMap map[string]PartitionMetrics
+
+type PartitionIO struct{}
+
+type PartitionsIO map[string]PartitionIO
