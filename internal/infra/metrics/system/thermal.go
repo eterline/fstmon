@@ -13,10 +13,10 @@ func NewHardwareThermalMetrics() *hardwareThermalMetrics {
 	return &hardwareThermalMetrics{}
 }
 
-func (hms *hardwareMetricSystem) ScrapeThermalMetrics(ctx context.Context) (domain.MetricWrapper[domain.ThermalMetricsMap], error) {
+func (hms *hardwareThermalMetrics) ScrapeThermalMetrics(ctx context.Context) (domain.ThermalMetricsMap, error) {
 	stat, err := sensorPs.TemperaturesWithContext(ctx)
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.ThermalMetricsMap](),
+		return domain.ThermalMetricsMap{},
 			ErrScrapeThermalMetrics.Wrap(err)
 	}
 
@@ -30,5 +30,5 @@ func (hms *hardwareMetricSystem) ScrapeThermalMetrics(ctx context.Context) (doma
 		}
 	}
 
-	return domain.WrapMetric(data), nil
+	return data, nil
 }

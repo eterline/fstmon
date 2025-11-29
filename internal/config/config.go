@@ -24,30 +24,35 @@ func clampSeconds(sec, min, max int) time.Duration {
 
 type Monitor struct {
 	Cpu        int `arg:"--cpu-loop" help:"Cpu metric update loop seconds"`
-	Avgload    int `arg:"--avgload-loop" help:"Avgload update loop seconds"`
-	System     int `arg:"--system-loop" help:"System update loop seconds"`
 	Network    int `arg:"--network-loop" help:"Network update loop seconds"`
-	Partitions int `arg:"--partitions-loop" help:"Parttitions update loop seconds"`
+	Memory     int `arg:"--memory-loop" help:"Memory update loop seconds"`
+	Partitions int `arg:"--partitions-loop" help:"Partitions update loop seconds"`
+	System     int `arg:"--system-loop" help:"System update loop seconds"`
+	Thermal    int `arg:"--partitions-loop" help:"Thermal update loop seconds"`
 }
 
 func (m Monitor) CpuDuration() time.Duration {
 	return clampSeconds(m.Cpu, 5, 120)
 }
 
-func (m Monitor) AvgloadDuration() time.Duration {
-	return clampSeconds(m.Avgload, 10, 300)
-}
-
-func (m Monitor) SystemDuration() time.Duration {
-	return clampSeconds(m.Cpu, 30, 300)
-}
-
 func (m Monitor) NetworkDuration() time.Duration {
-	return clampSeconds(m.Cpu, 5, 120)
+	return clampSeconds(m.Network, 5, 120)
+}
+
+func (m Monitor) MemorykDuration() time.Duration {
+	return clampSeconds(m.Memory, 5, 120)
 }
 
 func (m Monitor) PartitionsDuration() time.Duration {
-	return clampSeconds(m.Cpu, 30, 120)
+	return clampSeconds(m.Partitions, 15, 120)
+}
+
+func (m Monitor) SystemDuration() time.Duration {
+	return clampSeconds(m.System, 15, 300)
+}
+
+func (m Monitor) ThermalDuration() time.Duration {
+	return clampSeconds(m.Thermal, 15, 300)
 }
 
 type (

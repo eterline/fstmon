@@ -33,29 +33,29 @@ ScrapeInterfacesIO - collects network metrics for all interfaces.
 	It performs two snapshots of per-interface I/O counters with a 1-second interval
 	to calculate approximate network speed.
 */
-func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domain.MetricWrapper[domain.InterfacesIO], error) {
+func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domain.InterfacesIO, error) {
 	io0, err := hmn.fs.NetDev()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.InterfacesIO](),
+		return domain.InterfacesIO{},
 			ErrScrapeInterfacesIO.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.EmptyWrapMetric[domain.InterfacesIO](),
+		return domain.InterfacesIO{},
 			ErrScrapeInterfacesIO.Wrap(ctx.Err())
 	case <-time.After(1 * time.Second):
 	}
 
 	io1, err := hmn.fs.NetDev()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.InterfacesIO](),
+		return domain.InterfacesIO{},
 			ErrScrapeInterfacesIO.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.EmptyWrapMetric[domain.InterfacesIO](),
+		return domain.InterfacesIO{},
 			ErrScrapeMemoryMetrics.Wrap(ctx.Err())
 	default:
 	}
@@ -91,5 +91,5 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 		ioCounterMap[v.Name] = c
 	}
 
-	return domain.WrapMetric(ioCounterMap), nil
+	return ioCounterMap, nil
 }

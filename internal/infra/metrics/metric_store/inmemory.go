@@ -1,58 +1,40 @@
 package metricstore
 
-import (
-	"sync"
-	"sync/atomic"
-)
+import "sync"
 
-type ValueStore[T any] struct {
-	ptr   atomic.Pointer[T]
-	pool  sync.Pool
-	cycle *uint64
+type MetricMemoryStore struct {
+	mu   sync.Mutex
+	pool map[string]*ValueStore[any]
 }
 
-// NewValueStore - creates value container (parallel safe)
-func NewValueStore[T any]() *ValueStore[T] {
-	return &ValueStore[T]{
-		pool: sync.Pool{
-			New: func() any {
-				var zero T
-				return &zero
-			},
-		},
-		cycle: new(uint64),
+func NewMetricMemoryStore() *MetricMemoryStore {
+	return &MetricMemoryStore{
+		pool: map[string]*ValueStore[any]{},
 	}
 }
 
-// Save - put object to container
-func (s *ValueStore[T]) Save(v T) {
-	newVal := s.pool.Get().(*T)
-	*newVal = v
-
-	old := s.ptr.Swap(newVal)
-	if old != nil {
-		*old = *new(T)
-		s.pool.Put(old)
-		atomic.AddUint64(s.cycle, 1)
+func (mms *MetricMemoryStore) Save(v any, key string) {
+	vs, ok := mms.pool[key]
+	if !ok {
+		vs = NewValueStore[any]()
+		mms.mu.Lock()
+		mms.pool[key] = vs
+		mms.mu.Unlock()
 	}
+	vs.Save(v)
 }
 
-// Get - return object from container
-func (s *ValueStore[T]) Get() (T, bool) {
-	val := s.ptr.Load()
-	return *val, (val != nil)
-}
-
-// Clear - free container
-func (s *ValueStore[T]) Clear() {
-	old := s.ptr.Swap(nil)
-	if old != nil {
-		*old = *new(T)
-		s.pool.Put(old)
+func (mms *MetricMemoryStore) Get(key string) (v any, storeExists bool) {
+	vs, ok := mms.pool[key]
+	if !ok {
+		return nil, false
 	}
+	return vs.Get(), true
 }
 
-// Updated - update counter
-func (s *ValueStore[T]) Updated() uint64 {
-	return atomic.LoadUint64(s.cycle)
+func (mms *MetricMemoryStore) Clear() {
+	for k, vs := range mms.pool {
+		vs.Clear()
+		delete(mms.pool, k)
+	}
 }

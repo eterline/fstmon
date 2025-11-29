@@ -17,16 +17,16 @@ func NewHardwareMetricMemory(fs procfs.FS) *hardwareMetricMemory {
 	}
 }
 
-func (hmm *hardwareMetricMemory) ScrapeMemoryMetrics(ctx context.Context) (domain.MetricWrapper[domain.MemoryMetrics], error) {
+func (hmm *hardwareMetricMemory) ScrapeMemoryMetrics(ctx context.Context) (domain.MemoryMetrics, error) {
 	mem, err := hmm.fs.Meminfo()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.MemoryMetrics](),
+		return domain.MemoryMetrics{},
 			ErrScrapeMemoryMetrics.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.EmptyWrapMetric[domain.MemoryMetrics](),
+		return domain.MemoryMetrics{},
 			ErrScrapeMemoryMetrics.Wrap(ctx.Err())
 	default:
 	}
@@ -52,5 +52,5 @@ func (hmm *hardwareMetricMemory) ScrapeMemoryMetrics(ctx context.Context) (domai
 		SwapUsedPercent: usedPercent[uint64, float64](sused, stotal),
 	}
 
-	return domain.WrapMetric(data), nil
+	return data, nil
 }

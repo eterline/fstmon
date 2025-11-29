@@ -47,14 +47,14 @@ CpuPackage - returns static CPU package information, including:
 
     Returns an error if fetching CPU info fails or no cores are detected.
 */
-func (hmc *hardwareMetricCPU) ScrapeCpuPackage() (domain.MetricWrapper[domain.CpuPackage], error) {
+func (hmc *hardwareMetricCPU) ScrapeCpuPackage() (domain.CpuPackage, error) {
 	info, err := procf.FetchCpuInfo()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.CpuPackage](), err
+		return domain.CpuPackage{}, ErrScrapeCpuPackage.Wrap(err)
 	}
 
 	if len(info.Cores) == 0 {
-		return domain.EmptyWrapMetric[domain.CpuPackage](),
+		return domain.CpuPackage{},
 			ErrScrapeCpuPackage.Wrap(errors.New("cpu cores data doesn't exists"))
 	}
 
@@ -78,7 +78,7 @@ func (hmc *hardwareMetricCPU) ScrapeCpuPackage() (domain.MetricWrapper[domain.Cp
 		pkg.Cores = append(pkg.Cores, core)
 	}
 
-	return domain.WrapMetric(pkg), nil
+	return pkg, nil
 }
 
 /*
@@ -94,19 +94,19 @@ CpuMetrics - returns dynamic CPU metrics, including:
     Returns an error if fetching CPU info or CPU load fails,
     or if the number of cores and load entries do not match.
 */
-func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.MetricWrapper[domain.CpuMetrics], error) {
+func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.CpuMetrics, error) {
 	cpuInfo, err := pscpu.InfoWithContext(ctx)
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.CpuMetrics](), err
+		return domain.CpuMetrics{}, err
 	}
 
 	loads, err := pscpu.PercentWithContext(ctx, hmc.mi, true)
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.CpuMetrics](), err
+		return domain.CpuMetrics{}, err
 	}
 
 	if len(cpuInfo) != len(loads) {
-		return domain.EmptyWrapMetric[domain.CpuMetrics](), errors.New("unequal load stats count and core information count")
+		return domain.CpuMetrics{}, errors.New("unequal load stats count and core information count")
 	}
 
 	metrics := domain.CpuMetrics{
@@ -124,5 +124,5 @@ func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.Metr
 		metrics.Cores[i].Frequency = cpuInfo[i].Mhz
 	}
 
-	return domain.WrapMetric(metrics), nil
+	return metrics, nil
 }

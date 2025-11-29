@@ -18,10 +18,10 @@ func NewHardwareMetricPartitions(fs procfs.FS) *hardwareMetricPartitions {
 	}
 }
 
-func (hmp *hardwareMetricPartitions) ScrapePartitionsInfo(ctx context.Context) (domain.MetricWrapper[domain.PartitionsInfo], error) {
+func (hmp *hardwareMetricPartitions) ScrapePartitionsInfo(ctx context.Context) (domain.PartitionsInfo, error) {
 	prts, err := diskPs.PartitionsWithContext(ctx, true)
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.PartitionsInfo](),
+		return domain.PartitionsInfo{},
 			ErrScrapePartitionsInfo.Wrap(err)
 	}
 
@@ -36,7 +36,7 @@ func (hmp *hardwareMetricPartitions) ScrapePartitionsInfo(ctx context.Context) (
 		}
 	}
 
-	return domain.WrapMetric(data), nil
+	return data, nil
 }
 
 // func (hmp *hardwareMetricPartitions) ScrapePartitionMetrics(ctx context.Context) (domain.PartitionMetricsMap, error) {

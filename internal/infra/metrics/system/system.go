@@ -20,29 +20,29 @@ func NewHardwareMetricSystem(fs procfs.FS) *hardwareMetricSystem {
 	}
 }
 
-func (hms *hardwareMetricSystem) ScrapeSystemInfo(ctx context.Context) (domain.MetricWrapper[domain.SystemInfo], error) {
+func (hms *hardwareMetricSystem) ScrapeSystemInfo(ctx context.Context) (domain.SystemInfo, error) {
 	avg, err := hms.fs.LoadAvg()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.SystemInfo](),
+		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.EmptyWrapMetric[domain.SystemInfo](),
+		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(ctx.Err())
 	default:
 	}
 
 	uptime, err := hms.readProfsUptime()
 	if err != nil {
-		return domain.EmptyWrapMetric[domain.SystemInfo](),
+		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.EmptyWrapMetric[domain.SystemInfo](),
+		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(ctx.Err())
 	default:
 	}
@@ -59,7 +59,7 @@ func (hms *hardwareMetricSystem) ScrapeSystemInfo(ctx context.Context) (domain.M
 		TotalProcs:   t,
 	}
 
-	return domain.WrapMetric(data), nil
+	return data, nil
 }
 
 type Uptime struct {
