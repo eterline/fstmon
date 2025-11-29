@@ -261,7 +261,7 @@ func devPrefixPartitions(p string) []Partition {
 }
 
 /*
-/proc/diskstats — Displays I/O statistics for block devices.
+/proc/diskstats - Displays I/O statistics for block devices.
 
 Each line contains the following fields:
 
