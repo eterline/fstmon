@@ -12,14 +12,12 @@ import (
 
 	"github.com/eterline/fstmon/internal/domain"
 	"github.com/eterline/fstmon/internal/utils/output"
-	"github.com/eterline/fstmon/internal/utils/process"
 	pscpu "github.com/shirou/gopsutil/v4/cpu"
 )
 
 type CpuLoadMonitoring struct {
 	data domain.CpuLoad
 	mu   sync.RWMutex
-	err  process.ErrorHolder
 }
 
 func InitCpuLoadMon(ctx context.Context, loopDuration time.Duration) *CpuLoadMonitoring {
@@ -40,17 +38,13 @@ func (mon *CpuLoadMonitoring) updates(ctx context.Context, poolDur time.Duration
 
 		loads, err := pscpu.PercentWithContext(ctx, poolDur, true)
 		if err != nil {
-			mon.err.SetError(err)
 			continue
 		}
 
 		cpuInfo, err := pscpu.InfoWithContext(ctx)
 		if err != nil {
-			mon.err.SetError(err)
 			continue
 		}
-
-		mon.err.ClearError()
 
 		mon.mu.Lock()
 		mon.data.Average = output.AverageFloat(loads)
