@@ -65,14 +65,13 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 	/* Initialize map with full counters and assume speed = full counters initially */
 	for _, v := range io1 {
 		ioCounterMap[v.Name] = domain.NetworkingIO{
-			BytesFullRX:   v.RxBytes,
-			BytesFullTX:   v.TxBytes,
-			BytesPerSec:   domain.NewSpeedIO(v.RxBytes, v.TxBytes),
-			PacketsRx:     v.RxPackets,
-			PacketsTx:     v.TxPackets,
-			PacketsPerSec: domain.NewSpeedIO(v.RxPackets, v.TxPackets),
-			ErrPacketsRx:  v.RxErrors,
-			ErrPacketsTx:  v.TxErrors,
+			BytesTotal:       domain.NewIO(v.RxBytes, v.TxBytes),
+			PacketsTotal:     domain.NewIO(v.RxPackets, v.TxPackets),
+			ErrPacketsTotal:  domain.NewIO(v.RxErrors, v.TxErrors),
+			DropPacketsTotal: domain.NewIO(v.RxDropped, v.TxDropped),
+
+			BytesPerSec:   domain.NewIO(v.RxBytes, v.TxBytes),
+			PacketsPerSec: domain.NewIO(v.RxPackets, v.TxPackets),
 		}
 	}
 
@@ -83,11 +82,11 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 			continue
 		}
 
-		c.BytesPerSec.RX -= v.RxBytes
-		c.BytesPerSec.TX -= v.TxBytes
+		c.BytesPerSec.DecRX(v.RxBytes)
+		c.BytesPerSec.DecTX(v.TxBytes)
 
-		c.PacketsPerSec.RX -= v.RxPackets
-		c.PacketsPerSec.TX -= v.TxPackets
+		c.PacketsPerSec.DecRX(v.RxPackets)
+		c.PacketsPerSec.DecTX(v.TxPackets)
 
 		ioCounterMap[v.Name] = c
 	}

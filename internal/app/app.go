@@ -5,8 +5,18 @@
 package app
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/eterline/fstmon/internal/config"
+	"github.com/eterline/fstmon/internal/infra/http/common/api"
+	middleware "github.com/eterline/fstmon/internal/infra/http/middlewares"
+	"github.com/eterline/fstmon/internal/infra/http/server"
+	"github.com/eterline/fstmon/internal/infra/metrics/system"
+	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/pkg/toolkit"
+	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/procfs"
 )
 
 type InitFlags struct {
@@ -15,29 +25,46 @@ type InitFlags struct {
 }
 
 func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration) {
-	// log := log.MustLoggerFromContext(root.Context)
 
-	// log.Info("app started", "commit", flags.CommitHash, "version", flags.Version)
-	// defer func() {
-	// 	log.Info("app closed", "working_time", root.WorkTime())
-	// }()
+	ctx := root.Context
+	log := log.MustLoggerFromContext(ctx)
+	m := chi.NewMux()
 
-	// routes := web.RegisterRouter(root.Context, cfg)
-	// srv := server.NewServer(routes)
-	// defer srv.Close()
+	pfs, err := procfs.NewDefaultFS()
+	if err != nil {
+		log.Error("procfs init error", "error", err)
+	}
 
-	// root.NewThread()
-	// go func() {
-	// 	defer root.DoneThread()
-	// 	err := srv.Run(root.Context, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
-	// 	if err != nil {
-	// 		log.Error("server exited with error", "error", err)
-	// 		root.StopApp()
-	// 	}
-	// }()
+	net := system.NewHardwareMetricNetwork(pfs)
 
-	// if err := root.WaitThreads(5 * time.Second); err != nil {
-	// 	log.Warn("force exit")
-	// 	os.Exit(1)
-	// }
+	m.Use(middleware.AllowedHosts(ctx, []string{"linuxpc0.ad.lan"}))
+	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
+
+		pkg, err := net.ScrapeInterfacesIO(ctx)
+		if err != nil {
+			log.Error("scrape error", "error", err)
+			api.InternalErrorResponse().Write(w)
+			return
+		}
+
+		api.NewResponse().
+			SetCode(http.StatusOK).
+			WrapData(pkg).
+			Write(w)
+	})
+
+	srv := server.NewServer(m)
+
+	root.NewThread()
+	go func() {
+		defer root.DoneThread()
+
+		err := srv.Run(ctx, ":3000", "", "")
+		if err != nil {
+			log.Error("server run error", "error", err)
+		}
+	}()
+
+	root.WaitThreads(5 * time.Second)
+	srv.Close()
 }

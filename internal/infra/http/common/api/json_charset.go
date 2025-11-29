@@ -1,4 +1,4 @@
-package common
+package api
 
 import (
 	"strings"
@@ -72,12 +72,12 @@ func LoadDefault() {
 }
 
 /*
-StringContentType - returns full Content-Type string with current charset.
+stringContentType - returns full Content-Type string with current charset.
 
 	If t is empty, defaults to "application/json".
 	Optimized to avoid allocations via strings.Builder.
 */
-func StringContentType(t string) string {
+func stringContentType(t string) string {
 	if t == "" {
 		t = "application/json"
 	}

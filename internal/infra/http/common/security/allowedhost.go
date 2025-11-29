@@ -2,7 +2,7 @@
 // This file is part of fstmon.
 // Licensed under the MIT License. See the LICENSE file for details.
 
-package secure
+package security
 
 import (
 	"strings"

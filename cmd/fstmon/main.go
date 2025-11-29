@@ -5,8 +5,6 @@
 package main
 
 import (
-	"context"
-
 	"github.com/eterline/fstmon/internal/app"
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/log"
@@ -62,12 +60,7 @@ func main() {
 	)
 
 	logger := log.NewLogger(cfg.LogLevel, cfg.JSONlog)
-
-	root.UseContextAdders(
-		func(ctx context.Context) context.Context {
-			return log.WrapLoggerToContext(ctx, logger)
-		},
-	)
+	root.Context = log.WrapLoggerToContext(root.Context, logger)
 
 	app.Execute(root, Flags, cfg)
 }

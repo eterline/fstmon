@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
+	"github.com/eterline/fstmon/internal/infra/http/common/api"
+	"github.com/eterline/fstmon/internal/infra/http/common/security"
 	"github.com/eterline/fstmon/internal/log"
-	"github.com/eterline/fstmon/internal/services/secure"
-	"github.com/eterline/fstmon/internal/web/controller"
 )
 
 func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
@@ -84,7 +84,7 @@ func SecureControl(next http.Handler) http.Handler {
 func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []string) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
 
-	filter, err := secure.NewSubnetFilter(cidr)
+	filter, err := security.NewSubnetFilter(cidr)
 	if err != nil {
 		log.Warn("allowed subnets error", "error", err)
 	}
@@ -99,7 +99,7 @@ func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []st
 			ip, err := ipExt.ExtractIP(r)
 			if err != nil {
 				log.ErrorContext(r.Context(), "failed to parse request ip", "error", err.Error())
-				controller.ResponseInternalError(w)
+				api.InternalErrorResponse().Write(w)
 				return
 			}
 
@@ -110,7 +110,14 @@ func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []st
 			}
 
 			log.WarnContext(r.Context(), "request ip blocked", "ip", ip.String())
-			controller.ResponseError(w, http.StatusForbidden, "forbidden: IP not allowed")
+
+			if err := api.NewResponse().
+				SetCode(http.StatusForbidden).
+				SetMessage("request forbidden").
+				AddStringError("ip address whitelist mismatch").
+				Write(w); err != nil {
+				log.Error("response error", "error", err)
+			}
 		})
 	}
 }
@@ -118,7 +125,7 @@ func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []st
 func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
 
-	filter := secure.InitAllowedHostsFilter(hosts...)
+	filter := security.InitAllowedHostsFilter(hosts...)
 	if filter != nil {
 		log.Warn("setup allowed hosts", "hosts", filter.AllowedHosts())
 	}
@@ -133,7 +140,15 @@ func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.H
 					"request_host",
 					host,
 				)
-				controller.ResponseError(w, http.StatusForbidden, "forbidden: invalid host")
+
+				if err := api.NewResponse().
+					SetCode(http.StatusForbidden).
+					SetMessage("request forbidden").
+					AddStringError("invalid request host").
+					Write(w); err != nil {
+					log.Error("response error", "error", err)
+				}
+
 				return
 			}
 
@@ -177,7 +192,13 @@ func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) f
 				"auth_header", authHeader,
 			)
 
-			controller.ResponseError(w, http.StatusForbidden, "invalid token")
+			if err := api.NewResponse().
+				SetCode(http.StatusForbidden).
+				SetMessage("request forbidden").
+				AddStringError("invalid token bearer").
+				Write(w); err != nil {
+				log.Error("response error", "error", err)
+			}
 		})
 	}
 }

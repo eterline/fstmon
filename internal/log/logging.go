@@ -97,7 +97,7 @@ func MustLoggerFromContext(ctx context.Context) (logger *slog.Logger) {
 	if ok {
 		return l
 	}
-	panic("Logger doesn't wrapped in this context.Context")
+	panic("logger doesn't wrapped in this context.Context")
 }
 
 func selectLogLevel(level string) slog.Level {

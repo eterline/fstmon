@@ -18,7 +18,7 @@ hardwareMetricCPU - provides CPU hardware metrics, both static and dynamic.
 	Interval defines the averaging duration for dynamic metrics.
 */
 type hardwareMetricCPU struct {
-	interval time.Duration
+	mi time.Duration
 }
 
 /*
@@ -26,9 +26,9 @@ NewHardwareMetricCPU - creates a new hardwareMetricCPU instance.
 
 	Interval specifies the time duration for CPU load averaging in CpuMetrics.
 */
-func NewHardwareMetricCPU(interval time.Duration) *hardwareMetricCPU {
+func NewHardwareMetricCPU(measureInterwal time.Duration) *hardwareMetricCPU {
 	return &hardwareMetricCPU{
-		interval: interval,
+		mi: measureInterwal,
 	}
 }
 
@@ -100,7 +100,7 @@ func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.Metr
 		return domain.EmptyWrapMetric[domain.CpuMetrics](), err
 	}
 
-	loads, err := pscpu.PercentWithContext(ctx, hmc.interval, true)
+	loads, err := pscpu.PercentWithContext(ctx, hmc.mi, true)
 	if err != nil {
 		return domain.EmptyWrapMetric[domain.CpuMetrics](), err
 	}

@@ -1,26 +1,47 @@
 package main
 
 import (
-	"context"
+	"github.com/eterline/fstmon/internal/app"
+	"github.com/eterline/fstmon/internal/config"
+)
 
-	systemmonitor "github.com/eterline/fstmon/internal/infra/metrics/system"
-	"github.com/eterline/fstmon/internal/utils/output"
-	"github.com/prometheus/procfs"
+// -ladflags variables
+var (
+	CommitHash = "dev"
+	Version    = "dev"
+)
+
+var (
+	Flags = app.InitFlags{
+		CommitHash: CommitHash,
+		Version:    Version,
+	}
+
+	cfg = config.Configuration{
+		Log: config.Log{
+			LogLevel: "info",
+			JSONlog:  false,
+		},
+		Server: config.Server{
+			Listen:     ":3000",
+			CrtFileSSL: "",
+			KeyFileSSL: "",
+		},
+		Secure: config.Secure{
+			AllowedSubnets: []string{},
+			AllowedHosts:   []string{},
+			AuthToken:      "",
+		},
+		Monitor: config.Monitor{
+			Cpu:        5,
+			Avgload:    10,
+			System:     30,
+			Network:    5,
+			Partitions: 30,
+		},
+	}
 )
 
 func main() {
-
-	fs, err := procfs.NewDefaultFS()
-	if err != nil {
-		panic(err)
-	}
-
-	net := systemmonitor.NewHardwareMetricPartitions(fs)
-
-	data, err := net.ScrapePartitionsInfo(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	output.PrintlnPrettyJSON(data)
 
 }

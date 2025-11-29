@@ -2,25 +2,6 @@ package domain
 
 import "time"
 
-// Numerable is a constraint that matches all numeric types in Go.
-type Numerable interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64
-}
-
-func NewSpeedIO[T Numerable](rx, tx T) SpeedIO[T] {
-	return SpeedIO[T]{
-		RX: rx,
-		TX: tx,
-	}
-}
-
-type SpeedIO[T Numerable] struct {
-	RX T `json:"rx"`
-	TX T `json:"tx"`
-}
-
 // ============================ CPU domain structures ============================
 
 /*
@@ -76,16 +57,13 @@ NetworkingIO - instantaneous counters and speeds of a single
 	network interface, including received/sent bytes, packets, and errors.
 */
 type NetworkingIO struct {
-	BytesFullRX uint64          `json:"bytes_full_rx"` // Total bytes received
-	BytesFullTX uint64          `json:"bytes_full_tx"` // Total bytes sent
-	BytesPerSec SpeedIO[uint64] `json:"bytes_per_sec"`
+	BytesTotal       IO[uint64] `json:"bytes_total"`         // Total bytes
+	PacketsTotal     IO[uint64] `json:"packets_total"`       // Total packets
+	ErrPacketsTotal  IO[uint64] `json:"error_packets_total"` // Total packet errors
+	DropPacketsTotal IO[uint64] `json:"drop_packets_total"`  // Total packet drops
 
-	PacketsRx     uint64          `json:"packets_rx"` // Total packets received
-	PacketsTx     uint64          `json:"packets_tx"` // Total packets sent
-	PacketsPerSec SpeedIO[uint64] `json:"packets_per_sec"`
-
-	ErrPacketsRx uint64 `json:"err_packets_rx"` // Total RX packet errors
-	ErrPacketsTx uint64 `json:"err_packets_tx"` // Total TX packet errors
+	BytesPerSec   IO[uint64] `json:"bytes_per_sec"`   // Per second bytes
+	PacketsPerSec IO[uint64] `json:"packets_per_sec"` // Per second packets
 }
 
 /*
