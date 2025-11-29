@@ -10,6 +10,7 @@ import (
 
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/infra/http/common/api"
+	"github.com/eterline/fstmon/internal/infra/http/common/security"
 	middleware "github.com/eterline/fstmon/internal/infra/http/middlewares"
 	"github.com/eterline/fstmon/internal/infra/http/server"
 	"github.com/eterline/fstmon/internal/infra/metrics/system"
@@ -28,16 +29,16 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	ctx := root.Context
 	log := log.MustLoggerFromContext(ctx)
-	m := chi.NewMux()
 
 	pfs, err := procfs.NewDefaultFS()
 	if err != nil {
 		log.Error("procfs init error", "error", err)
 	}
-
 	net := system.NewHardwareMetricNetwork(pfs)
 
-	m.Use(middleware.AllowedHosts(ctx, []string{"linuxpc0.ad.lan"}))
+	m := chi.NewMux()
+	m.Use(middleware.RequestWrapper(security.NewIpExtractor(true)))
+
 	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
 
 		pkg, err := net.ScrapeInterfacesIO(ctx)

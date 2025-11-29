@@ -26,13 +26,10 @@ func (mrw *MiddlewareWithReqInfoWrapping) Enabled(ctx context.Context, rec slog.
 
 func (mrw *MiddlewareWithReqInfoWrapping) Handle(ctx context.Context, rec slog.Record) error {
 	if c, ok := domain.RequestInfoFromContext(ctx); ok {
-		if c.SourceIP != "" {
-			rec.Add("source_ip", c.SourceIP)
-		}
-
-		if c.ClientIP != "" {
-			rec.Add("client_ip", c.ClientIP)
-		}
+		rec.Add("request_duration_ms", c.RequestDuration().Milliseconds())
+		rec.Add("client", c.Client)
+		rec.Add("source_ip", c.Source.Addr())
+		rec.Add("source_port", c.Source.Port())
 	}
 
 	return mrw.next.Handle(ctx, rec)

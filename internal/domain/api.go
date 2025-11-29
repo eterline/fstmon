@@ -6,9 +6,9 @@ package domain
 
 import (
 	"context"
-	"net"
 	"net/http"
 	"net/netip"
+	"time"
 )
 
 type CtxKeyApi int
@@ -28,12 +28,13 @@ type ResponseAPI[T any] struct {
 }
 
 type RequestInfo struct {
-	SourceIP string `json:"source_ip"`
-	ClientIP string `json:"client_ip"`
+	Source    netip.AddrPort
+	Client    netip.Addr
+	startedAt time.Time
 }
 
-func (i RequestInfo) IP() net.IP {
-	return net.ParseIP(i.SourceIP)
+func (i RequestInfo) RequestDuration() time.Duration {
+	return time.Since(i.startedAt)
 }
 
 func (i RequestInfo) ToContext(ctx context.Context) context.Context {
@@ -51,8 +52,11 @@ func InitRequestInfo(r *http.Request, ext IpExtractor) RequestInfo {
 		panic(err)
 	}
 
+	ap, _ := netip.ParseAddrPort(r.RemoteAddr)
+
 	return RequestInfo{
-		ClientIP: ip.String(),
-		SourceIP: r.RemoteAddr,
+		Client:    ip,
+		Source:    ap,
+		startedAt: time.Now(),
 	}
 }

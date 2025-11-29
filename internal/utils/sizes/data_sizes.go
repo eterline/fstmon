@@ -3,13 +3,13 @@ package sizes
 import "math/bits"
 
 type (
-	SizeByteBase uint64
-	SizeBitBase  uint64
+	sizeByteBase uint64
+	sizeBitBase  uint64
 )
 
 // Byte-based sizes
 const (
-	Byte SizeByteBase = 1 << (10 * iota) // 1, 1024, 1024^2, ...
+	Byte sizeByteBase = 1 << (10 * iota) // 1, 1024, 1024^2, ...
 	KB                                   // Kilobyte
 	MB                                   // Megabyte
 	GB                                   // Gigabyte
@@ -18,7 +18,7 @@ const (
 	EB                                   // Exabyte
 )
 
-func (d SizeByteBase) String() string {
+func (d sizeByteBase) String() string {
 	switch d {
 	case Byte:
 		return "B"
@@ -39,7 +39,7 @@ func (d SizeByteBase) String() string {
 	}
 }
 
-func DetermByte2ByteBase(bytesSize uint64) (float64, SizeByteBase) {
+func DetermByte2ByteBase(bytesSize uint64) (float64, sizeByteBase) {
 	if bytesSize == 0 {
 		return 0, Byte
 	}
@@ -50,7 +50,7 @@ func DetermByte2ByteBase(bytesSize uint64) (float64, SizeByteBase) {
 		unitExp = 6
 	}
 
-	unit := SizeByteBase(1 << (10 * unitExp))
+	unit := sizeByteBase(1 << (10 * unitExp))
 	value := float64(bytesSize) / float64(unit)
 
 	return value, unit
@@ -58,7 +58,7 @@ func DetermByte2ByteBase(bytesSize uint64) (float64, SizeByteBase) {
 
 // Bit-based sizes
 const (
-	Bit SizeBitBase = 1 << (10 * iota) * 8 // 1 bit, 1024 bits / 8 = 128 bytes, ...
+	Bit sizeBitBase = 1 << (10 * iota) * 8 // 1 bit, 1024 bits / 8 = 128 bytes, ...
 	Kb                                     // Kilobit
 	Mb                                     // Megabit
 	Gb                                     // Gigabit
@@ -67,7 +67,7 @@ const (
 	Eb                                     // Exabit
 )
 
-func (d SizeBitBase) String() string {
+func (d sizeBitBase) String() string {
 	switch d {
 	case Bit:
 		return "b"
@@ -88,7 +88,7 @@ func (d SizeBitBase) String() string {
 	}
 }
 
-func DetermByte2BitBase(bitsSize uint64) (float64, SizeBitBase) {
+func DetermByte2BitBase(bitsSize uint64) (float64, sizeBitBase) {
 	if bitsSize == 0 {
 		return 0, Bit
 	}
@@ -102,5 +102,5 @@ func DetermByte2BitBase(bitsSize uint64) (float64, SizeBitBase) {
 	unit := uint64(1 << (10 * unitExp))
 	value := float64(bitsSize) / float64(unit)
 
-	return value, SizeBitBase(unit * 8)
+	return value, sizeBitBase(unit * 8)
 }

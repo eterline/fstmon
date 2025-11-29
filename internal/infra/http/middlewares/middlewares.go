@@ -6,10 +6,9 @@ package middleware
 
 import (
 	"context"
-	"crypto/subtle"
 	"net"
 	"net/http"
-	"regexp"
+	"net/netip"
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
@@ -35,6 +34,7 @@ func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
 	}
 }
 
+// TODO: Make access log stream with another walues
 // RequestLogger - logs basic information about each HTTP request, such as path and method,
 // using the logger stored in the provided context.
 func RequestLogger(ctx context.Context) func(next http.Handler) http.Handler {
@@ -42,14 +42,13 @@ func RequestLogger(ctx context.Context) func(next http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r)
 
 			log.DebugContext(
 				r.Context(), "api request",
 				"path", r.RequestURI,
 				"method", r.Method,
 			)
-
-			next.ServeHTTP(w, r)
 		})
 	}
 }
@@ -87,9 +86,13 @@ func SecureControl(next http.Handler) http.Handler {
 	})
 }
 
+type IpExtractor interface {
+	ExtractIP(r *http.Request) (netip.Addr, error)
+}
+
 // SourceSubnetsAllow - allows access only from specific CIDR subnets.
 // Extracts request IP, checks it against the whitelist, and blocks requests from disallowed networks.
-func SourceSubnetsAllow(ctx context.Context, ipExt domain.IpExtractor, cidr []string) func(http.Handler) http.Handler {
+func SourceSubnetsAllow(ctx context.Context, ipExt IpExtractor, cidr []string) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
 
 	filter, err := security.NewSubnetFilter(cidr)
@@ -167,42 +170,27 @@ func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.H
 	}
 }
 
-// BearerCheck - validates Authorization header against a preconfigured Bearer token.
-// Uses constant-time comparison to prevent timing attacks.
-// If token auth is disabled (empty bearer), middleware becomes a passthrough.
-func BearerCheck(ctx context.Context, bearer string, ipExt domain.IpExtractor) func(http.Handler) http.Handler {
+type BearerTester interface {
+	TestBearer(string) bool
+}
+
+// BearerAuth - validates Authorization header.
+func BearerAuth(ctx context.Context, btest BearerTester) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
-	enableAuth := !(bearer == "")
-	log.Info("setup token auth policy", "auth_enabled", enableAuth)
-
-	if !enableAuth {
-		return func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				next.ServeHTTP(w, r)
-			})
-		}
-	}
-
-	expected := []byte(bearer)
-	bearerReg := regexp.MustCompile(`^Bearer:\s*(.+)`)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authBearer := r.Header.Get("Authorization")
 
-			authHeader := r.Header.Get("Authorization")
-
-			if matches := bearerReg.FindStringSubmatch(authHeader); matches != nil {
-				token := []byte(matches[1])
-				if subtle.ConstantTimeCompare(token, expected) == 1 {
-					next.ServeHTTP(w, r)
-					return
-				}
+			if btest.TestBearer(authBearer) {
+				next.ServeHTTP(w, r)
+				return
 			}
 
 			log.WarnContext(
 				r.Context(),
 				"invalid request token",
-				"auth_header", authHeader,
+				"auth_header", authBearer,
 			)
 
 			if err := api.NewResponse().
