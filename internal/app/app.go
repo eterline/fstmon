@@ -6,12 +6,11 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
-	"github.com/eterline/fstmon/internal/domain"
 	"github.com/eterline/fstmon/internal/infra/http/common/api"
 	"github.com/eterline/fstmon/internal/infra/http/server"
 	metricstore "github.com/eterline/fstmon/internal/infra/metrics/metric_store"
@@ -50,8 +49,8 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ============================
 
-	mStore := metricstore.NewMetricMemoryStore()
-	defer mStore.Clear()
+	mStore := metricstore.NewMetricInMemoryStore()
+	defer mStore.Close()
 
 	metricPooling := monitor.NewServicePooler(mStore)
 
@@ -94,7 +93,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	root.NewThread()
 	go func() {
 		defer root.DoneThread()
-		metricPooling.Await()
+		metricPooling.Wait()
 		log.Info("metric pooling stopped")
 	}()
 
@@ -109,7 +108,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	m.Get("/metric/{metricKey}",
 		func(w http.ResponseWriter, r *http.Request) {
 			metricKey := chi.URLParam(r, "metricKey")
-			m, wkExists, mtExists := metricPooling.ActualMetric(metricKey)
+			m, wkExists, mtExists, retryIn := metricPooling.ActualMetric(metricKey)
 
 			if !wkExists {
 				api.NewResponse().
@@ -122,12 +121,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 			}
 
 			if !mtExists {
-
-				retry, ok := metricPooling.MetricInterval(metricKey)
-				if ok {
-					r := fmt.Sprintf("%d", int64(retry.Seconds()))
-					w.Header().Set("Retry-After", r)
-				}
+				w.Header().Set("Retry-After", strconv.Itoa(int(retryIn.Seconds())))
 
 				api.NewResponse().
 					SetCode(http.StatusServiceUnavailable).
@@ -138,7 +132,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 				return
 			}
 
-			api.NewResponse().WrapData(m).Write(w)
+			api.NewResponse().SetCode(http.StatusOK).WrapData(m).Write(w)
 		},
 	)
 
@@ -162,7 +156,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	srv.Close()
 }
 
-func WrapJob[T domain.Metric](f func(context.Context) (T, error)) monitor.UpdateWorker {
+func WrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {
 	return func(ctx context.Context) (any, error) {
 		return f(ctx)
 	}

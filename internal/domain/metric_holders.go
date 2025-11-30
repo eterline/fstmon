@@ -2,6 +2,12 @@ package domain
 
 import "time"
 
+type MetricState struct {
+	Value      any
+	Available  bool
+	LastUpdate time.Time
+}
+
 // ============================ CPU domain structures ============================
 
 /*

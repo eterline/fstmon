@@ -4,175 +4,144 @@ import (
 	"context"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 	"time"
 
+	"github.com/eterline/fstmon/internal/domain"
 	"github.com/eterline/fstmon/internal/log"
 )
 
 /*
-MetricSaverGeter — abstraction for storing and retrieving metric values.
-
-Save — stores a value under a specific key.
-Get  — retrieves the stored value by key.
-*/
-type MetricSaverGeter interface {
-	Save(v any, key string)
-	Get(key string) (any, bool)
-}
-
-/*
-UpdateWorker — metric update function.
+UpdateWorker - metric update function.
 
 	Accepts a context.
 	Returns the updated metric value or an error.
 */
 type UpdateWorker func(context.Context) (any, error)
 
-// updateJobContext — internal structure containing worker configuration.
-type updateJobContext struct {
-	job      UpdateWorker
-	interval time.Duration
-	cycles   uint64
+type WorkerConfig struct {
+	Interval time.Duration
+	Worker   UpdateWorker
 }
 
-func (ujc *updateJobContext) incCycle() {
-	atomic.AddUint64(&ujc.cycles, 1)
+type MetricStore interface {
+	SaveValue(key string, value any, timestamp time.Time)
+	GetState(key string) (domain.MetricState, bool)
 }
 
-func (ujc *updateJobContext) actualCycle() uint64 {
-	return atomic.LoadUint64(&ujc.cycles)
-}
-
-/*
-ServicePooler — manages a pool of metric update workers.
-
-	Each worker periodically calls its UpdateWorker function
-	and stores the result in the MetricSaverGeter.
-*/
+// ServicePooler - manages a pool of metric update workers.
 type ServicePooler struct {
-	metricPool MetricSaverGeter
-	jobPool    map[string]*updateJobContext
-	wg         sync.WaitGroup
+	metricSt  MetricStore
+	jobPool   map[string]*WorkerConfig
+	workersWg sync.WaitGroup
 }
 
-/*
-NewServicePooler — creates a new worker pool instance.
-
-s — implementation of MetricSaverGeter used to store metric results.
-*/
-func NewServicePooler(s MetricSaverGeter) *ServicePooler {
+// NewServicePooler - creates a new worker pool instance.
+func NewServicePooler(ms MetricStore) *ServicePooler {
 	return &ServicePooler{
-		metricPool: s,
-		jobPool:    map[string]*updateJobContext{},
+		metricSt: ms,
+		jobPool:  make(map[string]*WorkerConfig),
+	}
+}
+
+// AddMetricPooling - registers a periodic metric update worker.
+func (sp *ServicePooler) AddMetricPooling(w UpdateWorker, key string, wInterval time.Duration) {
+	sp.jobPool[key] = &WorkerConfig{
+		Interval: wInterval,
+		Worker:   w,
 	}
 }
 
 /*
-AddMetricPooling — registers a periodic metric update worker.
-
-uj       — update function to be executed.
-key      — unique identifier for the metric.
-interval — time interval between updates.
-*/
-func (sp *ServicePooler) AddMetricPooling(uj UpdateWorker, key string, interval time.Duration) {
-	sp.jobPool[key] = &updateJobContext{
-		job:      uj,
-		interval: interval,
-		cycles:   0,
-	}
-}
-
-/*
-RunPooling — starts all registered metric update workers.
+RunPooling - starts all registered metric update workers.
 
 Each worker runs in its own goroutine.
 Updates are saved to the MetricSaverGeter under their respective keys.
 */
 func (sp *ServicePooler) RunPooling(ctx context.Context) {
-	log := log.MustLoggerFromContext(ctx)
+	logger := log.MustLoggerFromContext(ctx)
 
 	if len(sp.jobPool) == 0 {
-		log.Warn("metric update workers do not exist")
+		logger.Warn("no metric workers registered")
 		return
 	}
 
-	log.InfoContext(ctx, "metric update workers starting", "workers", len(sp.jobPool))
+	logger.Info("metric metric workers starting", "count", len(sp.jobPool))
 
-	// Start each worker in its own goroutine.
-	for key, workerCtx := range sp.jobPool {
+	for key, cfg := range sp.jobPool {
 
-		log := log.With("worker_key", key)
-
-		log.InfoContext(ctx,
-			"worker start",
-			"pool_interval", workerCtx.interval,
+		wlog := logger.With(
+			"metric_key", key,
+			"interval", cfg.Interval,
 		)
 
-		sp.wg.Add(1)
+		wlog.Info("metric worker start")
+		sp.workersWg.Add(1)
 
-		go func(key string, workerCtx *updateJobContext, log *slog.Logger) {
-			defer sp.wg.Done()
+		go func(key string, cfg *WorkerConfig, wlog *slog.Logger) {
 
-			t := time.NewTicker(workerCtx.interval)
-			defer t.Stop()
+			defer sp.workersWg.Done()
+			ticker := time.NewTicker(cfg.Interval)
+			defer ticker.Stop()
 
 			for {
 				select {
 				case <-ctx.Done():
+					wlog.Info("metric worker shutdown")
 					return
 
-				case <-t.C:
-					workerCtx.incCycle()
-					log.DebugContext(ctx, "metric update request", "worker_cycle", workerCtx.actualCycle())
-					update, err := workerCtx.job(ctx)
+				case <-ticker.C:
+
+					wlog.Debug("worker start update metric")
+
+					value, err := cfg.Worker(ctx)
 					if err != nil {
-						log.ErrorContext(ctx, "metric update request error", "error", err)
+						wlog.Error("worker update metric error", "error", err)
 						continue
 					}
 
-					sp.metricPool.Save(update, key)
+					now := time.Now()
+					wlog.Debug("worker updated metric", "update_time", now)
+
+					sp.metricSt.SaveValue(key, value, now)
 				}
 			}
-		}(key, workerCtx, log)
+		}(key, cfg, wlog)
 	}
 }
 
 /*
-Await — waits for all metric update workers to finish.
+Await - waits for all metric update workers to finish.
 
 	Typically used after RunPooling when graceful shutdown is required.
 */
-func (sp *ServicePooler) Await() {
-	sp.wg.Wait()
+func (sp *ServicePooler) Wait() {
+	sp.workersWg.Wait()
 }
 
 /*
-ActualMetric — retrieves the most recent value of a metric and
-reports whether the worker and metric exist.
+ActualMetric - retrieves the last known state of a metric.
 
-	value         — metric value (may be nil)
-	workerExists  — true if worker with such key exists
-	metricExists  — true if metric value was already saved
+	value          - metric value (may be nil)
+	scheduleExists - worker for this key was registered
+	stateExists    - repository has at least one saved state
 */
-func (sp *ServicePooler) ActualMetric(key string) (value any, workerExists, metricExists bool) {
-	_, ok := sp.jobPool[key]
+func (sp *ServicePooler) ActualMetric(key string) (value any, scheduleExists, stateExists bool, retryIn time.Duration) {
+	job, ok := sp.jobPool[key]
 	if !ok {
-		return nil, false, false
+		return nil, false, false, 0
 	}
 
-	m, ok := sp.metricPool.Get(key)
-	if !ok || m == nil {
-		return nil, true, false
-	}
-
-	return m, true, true
-}
-
-func (sp *ServicePooler) MetricInterval(key string) (time.Duration, bool) {
-	ctx, ok := sp.jobPool[key]
+	state, ok := sp.metricSt.GetState(key)
 	if !ok {
-		return 0, false
+		return nil, true, false, job.Interval
 	}
-	return ctx.interval, true
+
+	nextUpdate := state.LastUpdate.Add(job.Interval)
+	remaining := time.Until(nextUpdate)
+
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return state.Value, true, true, remaining
 }

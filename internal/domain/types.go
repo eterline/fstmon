@@ -1,54 +1,5 @@
 package domain
 
-import "time"
-
-// ==========================
-
-/*
-metric - type constraint that defines all supported metric types.
-
-	Used for generic MetricWrapper to restrict allowed metric types.
-*/
-type Metric interface {
-	CpuPackage | CpuMetrics |
-		InterfacesIO |
-		MemoryMetrics |
-		PartitionsInfo | PartitionsIO |
-		SystemInfo |
-		ThermalMetricsMap
-}
-
-/*
-WrapMetric - wraps a metric of type M with creation timestamp.
-
-	Returns a MetricWrapper containing the metric and current time.
-*/
-func WrapMetric[M Metric](metric M) MetricWrapper[M] {
-	return MetricWrapper[M]{
-		CreatedAt: time.Now(),
-		Metric:    metric,
-	}
-}
-
-/*
-EmptyWrapMetric - creates an empty MetricWrapper of type M.
-
-	Useful for initializing variables or zero-value placeholders.
-*/
-func EmptyWrapMetric[M Metric]() MetricWrapper[M] {
-	return MetricWrapper[M]{}
-}
-
-/*
-MetricWrapper - generic wrapper for metrics.
-
-	Holds a creation timestamp and the actual metric of type M.
-*/
-type MetricWrapper[M Metric] struct {
-	CreatedAt time.Time `json:"created_at"` // Timestamp when the metric was wrapped
-	Metric    M         `json:"metric"`     // Wrapped metric
-}
-
 // ==========================
 
 /*
