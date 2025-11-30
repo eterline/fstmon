@@ -6,12 +6,10 @@ package app
 
 import (
 	"context"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
-	"github.com/eterline/fstmon/internal/infra/http/common/api"
+	httphomepage "github.com/eterline/fstmon/internal/infra/http/homepage"
 	"github.com/eterline/fstmon/internal/infra/http/server"
 	metricstore "github.com/eterline/fstmon/internal/infra/metrics/metric_store"
 	"github.com/eterline/fstmon/internal/infra/metrics/system"
@@ -120,44 +118,36 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ============================
 
-	// TODO: http adapter setup
+	rootMux := chi.NewMux()
 
-	// ============================
+	metricRouter := chi.NewRouter()
 
-	m := chi.NewMux()
+	// =========
 
-	m.Get("/metric/{metricKey}",
-		func(w http.ResponseWriter, r *http.Request) {
-			metricKey := chi.URLParam(r, "metricKey")
-			m, wkExists, mtExists, retryIn := metricPooling.ActualMetric(metricKey)
-
-			if !wkExists {
-				api.NewResponse().
-					SetCode(http.StatusNotFound).
-					SetMessage("uncorrect metric key").
-					AddStringError("metric worker not exists").
-					Write(w)
-
-				return
-			}
-
-			if !mtExists {
-				w.Header().Set("Retry-After", strconv.Itoa(int(retryIn.Seconds())))
-
-				api.NewResponse().
-					SetCode(http.StatusServiceUnavailable).
-					SetMessage("metric not exists").
-					AddStringError("metric did not scraped yet").
-					Write(w)
-
-				return
-			}
-
-			api.NewResponse().SetCode(http.StatusOK).WrapData(m).Write(w)
+	// TODO:
+	h := httphomepage.New(metricPooling, log)
+	metricRouter.Route("/homepage",
+		func(r chi.Router) {
+			r.Get("/sensors", h.HandleThermal)
+			r.Get("/system", h.HandleSystem)
 		},
 	)
 
-	srv := server.NewServer(m, server.WithTLS(server.NewServerTlsConfig()))
+	// =========
+
+	metricRouter.Route("/flugel",
+		func(r chi.Router) {
+			// TODO: wiil be later
+		},
+	)
+
+	// =========
+
+	rootMux.Mount("/metric", metricRouter)
+
+	// ============================
+
+	srv := server.NewServer(rootMux, server.WithTLS(server.NewServerTlsConfig()))
 	defer srv.Close()
 
 	// ============================

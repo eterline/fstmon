@@ -153,12 +153,11 @@ func (r *ResponseHttpWrapper) Write(w http.ResponseWriter) error {
 
 	w.Header().Set("Content-Type", stringContentType(""))
 
-	code := r.Code
-	if code == 0 {
-		code = http.StatusOK
+	if r.Code == 0 {
+		r.Code = http.StatusOK
 	}
 
-	w.WriteHeader(code)
+	w.WriteHeader(r.Code)
 
 	err := json.NewEncoder(w).Encode(r)
 	if err != nil {
