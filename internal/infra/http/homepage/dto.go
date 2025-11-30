@@ -70,20 +70,20 @@ type DTOMemory struct {
 func Domain2DTOMemory(v domain.MemoryMetrics) *DTOMemory {
 	return &DTOMemory{
 		RAM: DTOMemoryT{
-			Total:         queryByteBaseSizes(0, v.Total),
-			Used:          queryByteBaseSizes(0, v.Used),
-			Free:          queryByteBaseSizes(0, v.Free),
+			Total:         NewQBBSBuilder(0).Add(v.Total).Build(),
+			Used:          NewQBBSBuilder(0).Add(v.Used).Build(),
+			Free:          NewQBBSBuilder(0).Add(v.Free).Build(),
 			UsedPercent:   fmt.Sprintf("%.1f%%", v.UsedPercent),
-			UsedTotal:     queryByteBaseSizes('/', v.Used, v.Total),
-			UsedTotalFree: queryByteBaseSizes('/', v.Used, v.Total, v.Free),
+			UsedTotal:     NewQBBSBuilder('/').Add(v.Used).Add(v.Total).Build(),
+			UsedTotalFree: NewQBBSBuilder('/').Add(v.Used).Add(v.Total).Add(v.Free).Build(),
 		},
 		Swap: DTOMemoryT{
-			Total:         queryByteBaseSizes(0, v.SwapTotal),
-			Used:          queryByteBaseSizes(0, v.SwapUsed),
-			Free:          queryByteBaseSizes(0, v.SwapFree),
+			Total:         NewQBBSBuilder(0).Add(v.SwapTotal).Build(),
+			Used:          NewQBBSBuilder(0).Add(v.SwapUsed).Build(),
+			Free:          NewQBBSBuilder(0).Add(v.SwapFree).Build(),
 			UsedPercent:   fmt.Sprintf("%.1f%%", v.SwapUsedPercent),
-			UsedTotal:     queryByteBaseSizes('/', v.SwapUsed, v.SwapTotal),
-			UsedTotalFree: queryByteBaseSizes('/', v.SwapUsed, v.SwapTotal, v.SwapFree),
+			UsedTotal:     NewQBBSBuilder('/').Add(v.SwapUsed).Add(v.SwapTotal).Build(),
+			UsedTotalFree: NewQBBSBuilder('/').Add(v.SwapUsed).Add(v.SwapTotal).Add(v.SwapFree).Build(),
 		},
 	}
 }

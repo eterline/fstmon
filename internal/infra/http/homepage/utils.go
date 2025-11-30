@@ -61,23 +61,38 @@ func updownSet(p []byte, upperSet bool) []byte {
 	return bytes.ToLower(p)
 }
 
-func queryByteBaseSizes(delim byte, ss ...uint64) string {
-	if len(ss) == 0 {
+type queryByteBaseSizesBuilder struct {
+	delim byte
+	q     int
+	sB    *strings.Builder
+}
+
+func NewQBBSBuilder(delim byte) *queryByteBaseSizesBuilder {
+	b := &strings.Builder{}
+	b.Grow(32)
+	return &queryByteBaseSizesBuilder{
+		delim: delim,
+		q:     0,
+		sB:    b,
+	}
+}
+
+func (q *queryByteBaseSizesBuilder) Add(v uint64) *queryByteBaseSizesBuilder {
+	if q.q > 0 {
+		q.sB.WriteByte(q.delim)
+	}
+	q.q++
+
+	vf, unit := sizes.DetermByte2ByteBase(v)
+	fmt.Fprintf(q.sB, "%.2f", vf)
+	q.sB.WriteString(unit.String())
+
+	return q
+}
+
+func (q *queryByteBaseSizesBuilder) Build() string {
+	if q.q == 0 {
 		return "..."
 	}
-
-	sB := &strings.Builder{}
-	sB.Grow(32)
-
-	for i, s := range ss {
-		v, unit := sizes.DetermByte2ByteBase(s)
-		fmt.Fprintf(sB, "%.2f", v)
-		sB.WriteString(unit.String())
-
-		if i >= 0 && i < (len(ss)-1) {
-			sB.WriteByte(delim)
-		}
-	}
-
-	return sB.String()
+	return q.sB.String()
 }
