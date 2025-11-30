@@ -8,7 +8,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"net/netip"
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
@@ -20,13 +19,12 @@ import (
 // RequestWrapper - wraps incoming HTTP requests with additional metadata.
 // Initializes RequestInfo, extracts client IP, attaches it to the request context,
 // and sets the X-Request-Time header.
-func RequestWrapper(ipExt domain.IpExtractor) func(http.Handler) http.Handler {
+func RequestWrapper(ipExt IpExtractor) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			info := domain.InitRequestInfo(r, ipExt)
 
-			w.Header().Set("X-Request-Time", time.Now().Format(time.RFC1123))
+			w.Header().Set("X-Request-Time", info.RequestCreated().Format(time.RFC1123))
 
 			r = r.WithContext(info.ToContext(r.Context()))
 			next.ServeHTTP(w, r)
@@ -84,10 +82,6 @@ func SecureControl(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-type IpExtractor interface {
-	ExtractIP(r *http.Request) (netip.Addr, error)
 }
 
 // SourceSubnetsAllow - allows access only from specific CIDR subnets.
@@ -170,28 +164,19 @@ func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.H
 	}
 }
 
-type BearerTester interface {
-	TestBearer(string) bool
-}
-
 // BearerAuth - validates Authorization header.
 func BearerAuth(ctx context.Context, btest BearerTester) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authBearer := r.Header.Get("Authorization")
 
-			if btest.TestBearer(authBearer) {
+			if b := r.Header.Get("Authorization"); btest.TestBearer(b) {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			log.WarnContext(
-				r.Context(),
-				"invalid request token",
-				"auth_header", authBearer,
-			)
+			log.WarnContext(r.Context(), "invalid auth bearer")
 
 			if err := api.NewResponse().
 				SetCode(http.StatusForbidden).

@@ -85,7 +85,56 @@ func (hhg *HomepageHandlerGroup) HandleSystem(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err := api.NewResponse().WrapData(m).Write(w)
+	dto := Domain2DTOSystem(m)
+
+	err := api.NewResponse().WrapData(dto).Write(w)
+	if err != nil {
+		hhg.log.Error("response error", "error", err)
+	}
+}
+
+func (hhg *HomepageHandlerGroup) HandleNetwork(w http.ResponseWriter, r *http.Request) {
+	m, ok := GetMetric[domain.InterfacesIOMap](hhg.actualStore, w, "net_io")
+	if !ok {
+		return
+	}
+
+	dto := Domain2DTONetworkInterfaceIO(m)
+
+	err := api.NewResponse().WrapData(dto).Write(w)
+	if err != nil {
+		hhg.log.Error("response error", "error", err)
+	}
+}
+
+func (hhg *HomepageHandlerGroup) HandleMemory(w http.ResponseWriter, r *http.Request) {
+	m, ok := GetMetric[domain.MemoryMetrics](hhg.actualStore, w, "memory")
+	if !ok {
+		return
+	}
+
+	dto := Domain2DTOMemory(m)
+
+	err := api.NewResponse().WrapData(dto).Write(w)
+	if err != nil {
+		hhg.log.Error("response error", "error", err)
+	}
+}
+
+func (hhg *HomepageHandlerGroup) HandleCpu(w http.ResponseWriter, r *http.Request) {
+	pkg, ok := GetMetric[domain.CpuPackage](hhg.actualStore, w, "cpu")
+	if !ok {
+		return
+	}
+
+	mtrcs, ok := GetMetric[domain.CpuMetrics](hhg.actualStore, w, "cpu_usage")
+	if !ok {
+		return
+	}
+
+	dto := Domain2DTOCpu(pkg, mtrcs)
+
+	err := api.NewResponse().WrapData(dto).Write(w)
 	if err != nil {
 		hhg.log.Error("response error", "error", err)
 	}

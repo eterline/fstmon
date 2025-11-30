@@ -62,7 +62,7 @@ NetworkingIO - instantaneous counters and speeds of a single
 
 	network interface, including received/sent bytes, packets, and errors.
 */
-type NetworkingIO struct {
+type InterfaceIO struct {
 	BytesTotal       IO[uint64] `json:"bytes_total"`         // Total bytes
 	PacketsTotal     IO[uint64] `json:"packets_total"`       // Total packets
 	ErrPacketsTotal  IO[uint64] `json:"error_packets_total"` // Total packet errors
@@ -75,7 +75,7 @@ type NetworkingIO struct {
 /*
 InterfacesIO - network interface names to their instantaneous.
 */
-type InterfacesIO map[string]NetworkingIO
+type InterfacesIOMap map[string]InterfaceIO
 
 // ============================ System domain structures ============================
 

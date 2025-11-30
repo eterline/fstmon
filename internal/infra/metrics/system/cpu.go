@@ -47,9 +47,13 @@ CpuPackage - returns static CPU package information, including:
 
     Returns an error if fetching CPU info fails or no cores are detected.
 */
-func (hmc *hardwareMetricCPU) ScrapeCpuPackage() (domain.CpuPackage, error) {
+func (hmc *hardwareMetricCPU) ScrapeCpuPackage(ctx context.Context) (domain.CpuPackage, error) {
 	info, err := procf.FetchCpuInfo()
 	if err != nil {
+		return domain.CpuPackage{}, ErrScrapeCpuPackage.Wrap(err)
+	}
+
+	if err := ctx.Err(); err != nil {
 		return domain.CpuPackage{}, ErrScrapeCpuPackage.Wrap(err)
 	}
 

@@ -33,6 +33,10 @@ type RequestInfo struct {
 	startedAt time.Time
 }
 
+func (i RequestInfo) RequestCreated() time.Time {
+	return i.startedAt
+}
+
 func (i RequestInfo) RequestDuration() time.Duration {
 	return time.Since(i.startedAt)
 }

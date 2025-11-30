@@ -33,38 +33,38 @@ ScrapeInterfacesIO - collects network metrics for all interfaces.
 	It performs two snapshots of per-interface I/O counters with a 1-second interval
 	to calculate approximate network speed.
 */
-func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domain.InterfacesIO, error) {
+func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domain.InterfacesIOMap, error) {
 	io0, err := hmn.fs.NetDev()
 	if err != nil {
-		return domain.InterfacesIO{},
+		return domain.InterfacesIOMap{},
 			ErrScrapeInterfacesIO.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.InterfacesIO{},
+		return domain.InterfacesIOMap{},
 			ErrScrapeInterfacesIO.Wrap(ctx.Err())
 	case <-time.After(1 * time.Second):
 	}
 
 	io1, err := hmn.fs.NetDev()
 	if err != nil {
-		return domain.InterfacesIO{},
+		return domain.InterfacesIOMap{},
 			ErrScrapeInterfacesIO.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.InterfacesIO{},
+		return domain.InterfacesIOMap{},
 			ErrScrapeMemoryMetrics.Wrap(ctx.Err())
 	default:
 	}
 
-	ioCounterMap := make(domain.InterfacesIO, len(io1))
+	data := make(domain.InterfacesIOMap, len(io1))
 
 	/* Initialize map with full counters and assume speed = full counters initially */
 	for _, v := range io1 {
-		ioCounterMap[v.Name] = domain.NetworkingIO{
+		data[v.Name] = domain.InterfaceIO{
 			BytesTotal:       domain.NewIO(v.RxBytes, v.TxBytes),
 			PacketsTotal:     domain.NewIO(v.RxPackets, v.TxPackets),
 			ErrPacketsTotal:  domain.NewIO(v.RxErrors, v.TxErrors),
@@ -77,7 +77,7 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 
 	/* Subtract first snapshot to compute actual speed during the interval */
 	for _, v := range io0 {
-		c, ok := ioCounterMap[v.Name]
+		c, ok := data[v.Name]
 		if !ok {
 			continue
 		}
@@ -88,8 +88,8 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 		c.PacketsPerSec.DecRX(v.RxPackets)
 		c.PacketsPerSec.DecTX(v.TxPackets)
 
-		ioCounterMap[v.Name] = c
+		data[v.Name] = c
 	}
 
-	return ioCounterMap, nil
+	return data, nil
 }

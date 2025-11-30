@@ -93,7 +93,7 @@ func (sp *ServicePooler) RunPooling(ctx context.Context) {
 				}
 
 				now := time.Now()
-				wlog.Debug("worker updated metric", "update_time", now)
+				wlog.Debug("worker updated metric", "update_time", now.Format(time.RFC1123))
 
 				sp.metricSt.SaveValue(key, value, now)
 			}

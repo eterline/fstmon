@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
+	"github.com/eterline/fstmon/internal/infra/http/common/api"
 	httphomepage "github.com/eterline/fstmon/internal/infra/http/homepage"
 	"github.com/eterline/fstmon/internal/infra/http/server"
 	metricstore "github.com/eterline/fstmon/internal/infra/metrics/metric_store"
@@ -70,7 +71,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// CPU summary info
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtCpu.ScrapeCpuMetrics), "cpu", time.Minute,
+		WrapJob(hMtCpu.ScrapeCpuPackage), "cpu", time.Minute,
 	)
 
 	// Network interfaces I/O
@@ -119,6 +120,8 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	// ============================
 
 	rootMux := chi.NewMux()
+	rootMux.NotFound(api.HandleNotFound)
+	rootMux.MethodNotAllowed(api.HandleNotAllowedMethod)
 
 	metricRouter := chi.NewRouter()
 
@@ -126,10 +129,13 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// TODO:
 	h := httphomepage.New(metricPooling, log)
+
 	metricRouter.Route("/homepage",
 		func(r chi.Router) {
-			r.Get("/sensors", h.HandleThermal)
+			r.Get("/network", h.HandleNetwork)
+			r.Get("/memory", h.HandleMemory)
 			r.Get("/system", h.HandleSystem)
+			r.Get("/cpu", h.HandleCpu)
 		},
 	)
 
