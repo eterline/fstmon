@@ -32,6 +32,10 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	log := log.MustLoggerFromContext(ctx)
 
 	log.Info("starting app", "commit", flags.CommitHash, "version", flags.Version)
+	defer func() {
+		wt := root.WorkTime()
+		log.Info("exit from app", "running_time", wt)
+	}()
 
 	// ============================
 
@@ -49,38 +53,58 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ============================
 
+	log.Info("in-memory store init")
 	mStore := metricstore.NewMetricInMemoryStore()
-	defer mStore.Close()
+	defer func() {
+		log.Info("in-memory store closed")
+		mStore.Close()
+	}()
 
-	metricPooling := monitor.NewServicePooler(mStore)
+	metricPooling := monitor.NewServicePooler(mStore) // Metric pooling service
 
 	// ===========
 
+	// CPU usage
 	hMtCpu := system.NewHardwareMetricCPU(time.Second)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtCpu.ScrapeCpuMetrics), "cpu_dynamic", cfg.CpuDuration(),
+		WrapJob(hMtCpu.ScrapeCpuMetrics), "cpu_usage", cfg.CpuDuration(),
 	)
 
+	// CPU summary info
+	metricPooling.AddMetricPooling(
+		WrapJob(hMtCpu.ScrapeCpuMetrics), "cpu", time.Minute,
+	)
+
+	// Network interfaces I/O
 	hMtNet := system.NewHardwareMetricNetwork(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtNet.ScrapeInterfacesIO), "net_io", cfg.NetworkDuration(),
+		WrapJob(hMtNet.ScrapeInterfacesIO), "net_io", cfg.NetworkIoDuration(),
 	)
 
+	// Memory stats
 	hMtMem := system.NewHardwareMetricMemory(proc)
 	metricPooling.AddMetricPooling(
 		WrapJob(hMtMem.ScrapeMemoryMetrics), "memory", cfg.MemorykDuration(),
 	)
 
+	// Partitions static info
 	hMtParts := system.NewHardwareMetricPartitions(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtParts.ScrapePartitionsInfo), "partitions", cfg.PartitionsDuration(),
+		WrapJob(hMtParts.ScrapePartitionsInfo), "partitions", time.Minute,
 	)
 
+	// Partitions I/O metrics
+	metricPooling.AddMetricPooling(
+		WrapJob(hMtParts.ScrapePartitionIO), "partitions_io", cfg.PartitionsIoDuration(),
+	)
+
+	// System info (loadavg, uptime, procs, etc.)
 	hMtSystem := system.NewHardwareMetricSystem(proc)
 	metricPooling.AddMetricPooling(
 		WrapJob(hMtSystem.ScrapeSystemInfo), "system", cfg.SystemDuration(),
 	)
 
+	// Thermal sensors
 	hMtThermal := system.NewHardwareThermalMetrics()
 	metricPooling.AddMetricPooling(
 		WrapJob(hMtThermal.ScrapeThermalMetrics), "thermal", cfg.ThermalDuration(),
@@ -88,14 +112,11 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ===========
 
-	metricPooling.RunPooling(ctx)
-
-	root.NewThread()
-	go func() {
-		defer root.DoneThread()
+	root.WrapWorker(func() {
+		metricPooling.RunPooling(ctx)
 		metricPooling.Wait()
 		log.Info("metric pooling stopped")
-	}()
+	})
 
 	// ============================
 
@@ -136,24 +157,20 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		},
 	)
 
-	srv := server.NewServer(m)
+	srv := server.NewServer(m, server.WithTLS(server.NewServerTlsConfig()))
+	defer srv.Close()
 
 	// ============================
 
-	root.NewThread()
-	go func() {
-		defer root.DoneThread()
-
-		err := srv.Run(ctx, ":3000", "", "")
+	root.WrapWorker(func() {
+		err := srv.Run(ctx, ":3000", cfg.KeyFileSSL, cfg.CrtFileSSL)
 		if err != nil {
 			log.Error("server run error", "error", err)
 		}
-	}()
+	})
 
 	// ============================
-	root.Wait()
-	root.WaitThreads(15 * time.Second)
-	srv.Close()
+	root.WaitWorkers(15 * time.Second)
 }
 
 func WrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {

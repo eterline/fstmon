@@ -39,12 +39,12 @@ var (
 			AuthToken:      "",
 		},
 		Monitor: config.Monitor{
-			Cpu:        10,
-			Network:    10,
-			Memory:     10,
-			System:     20,
-			Partitions: 20,
-			Thermal:    20,
+			Cpu:          10,
+			NetworkIO:    10,
+			Memory:       10,
+			System:       20,
+			PartitionsIO: 10,
+			Thermal:      20,
 		},
 	}
 )

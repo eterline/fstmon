@@ -77,22 +77,26 @@ func (s *Server) Run(ctx context.Context, addr, key, crt string) error {
 	logger := log.MustLoggerFromContext(ctx).With("listen", addr)
 
 	s.srv.Addr = addr
-	tlsEnabled := s.tlsCfg != nil && key != "" && crt != ""
+	tlsEnabled := s.srv.TLSConfig != nil && key != "" && crt != ""
 	logger = logger.With("tls", tlsEnabled)
+
+	if tlsEnabled {
+		logger = logger.With("ssl_certificate", crt, "ssl_key", key)
+	}
 
 	errCh := make(chan error, 1)
 
 	go func() {
 		var err error
 		if tlsEnabled {
-			logger.Info("starting server with TLS", "crt", crt, "key", key)
 			err = s.srv.ListenAndServeTLS(crt, key)
 		} else {
-			logger.Info("starting server without TLS")
 			err = s.srv.ListenAndServe()
 		}
 		errCh <- err
 	}()
+
+	logger.Info("server started")
 
 	select {
 	case <-ctx.Done():

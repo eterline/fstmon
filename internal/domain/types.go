@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // ==========================
 
 /*
@@ -31,7 +33,7 @@ IO - generic structure representing input/output metrics.
 
 	Holds RX (received), TX (transmitted) and a Summary field (RX+TX).
 */
-type IO[T Numerable] struct {
+type IO[T Numerable | time.Duration] struct {
 	Summary T `json:"summary"` // Total of RX and TX
 	RX      T `json:"rx"`      // Received value
 	TX      T `json:"tx"`      // Transmitted value

@@ -164,6 +164,41 @@ type PartitionMetrics struct {
 
 type PartitionMetricsMap map[string]PartitionMetrics
 
-type PartitionIO struct{}
+// PartitionIO - I/O statistics for a partition.
+type PartitionIO struct {
+	IopsInProgress uint64 `json:"iops_in_progress"` // Number of I/O operations currently in progress
 
-type PartitionsIO map[string]PartitionIO
+	Ops       IO[uint64] `json:"ops"`
+	MergedOps IO[uint64] `json:"merged_ops"` // RX = merged_read_count, TX = merged_write_count
+	Bytes     IO[uint64] `json:"bytes"`      // RX = read_bytes, TX = write_bytes
+
+	OpsPerSec       IO[uint64] `json:"ops_per_sec"`
+	MergedOpsPerSec IO[uint64] `json:"merged_ops_per_sec"`
+	BytesPerSec     IO[uint64] `json:"bytes_per_sec"`
+
+	Time       IO[time.Duration] `json:"time"`        // RX = read_time, TX = write_time
+	IoTime     time.Duration     `json:"io_time"`     // Total I/O time
+	WeightedIO time.Duration     `json:"weighted_io"` // Weighted I/O time
+}
+
+type PartitionIOMap map[string]PartitionIO
+
+// SetReadTime - sets the read time from time.Duration
+func (p *PartitionIO) SetReadTime(ms uint64) {
+	p.Time.RX = time.Millisecond * time.Duration(ms)
+}
+
+// SetWriteTime - sets the write time from time.Duration
+func (p *PartitionIO) SetWriteTime(ms uint64) {
+	p.Time.TX = time.Millisecond * time.Duration(ms)
+}
+
+// SetTotalTime - sets the total I/O time from time.Duration
+func (p *PartitionIO) SetTotalTime(ms uint64) {
+	p.IoTime = time.Millisecond * time.Duration(ms)
+}
+
+// SetWeightedIOTime - sets the weighted I/O time from time.Duration
+func (p *PartitionIO) SetWeightedIOTime(ms uint64) {
+	p.WeightedIO = time.Millisecond * time.Duration(ms)
+}

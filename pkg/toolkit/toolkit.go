@@ -44,18 +44,27 @@ func (s *AppStarter) Wait() {
 	<-s.Context.Done()
 }
 
-// NewThread - appends thread
-func (s *AppStarter) NewThread() {
+// AddWorker - appends worker
+func (s *AppStarter) AddWorker() {
 	s.wg.Add(1)
 }
 
-// DoneThread - final thread
-func (s *AppStarter) DoneThread() {
+// DoneWorker - final worker
+func (s *AppStarter) DoneWorker() {
 	s.wg.Done()
 }
 
-// FinalThreads - wait for thread final or timeout exit
-func (s *AppStarter) WaitThreads(timeout time.Duration) error {
+// WrapWorker - wrap worker into root workers
+func (s *AppStarter) WrapWorker(f func()) {
+	s.AddWorker()
+	go func() {
+		defer s.DoneWorker()
+		f()
+	}()
+}
+
+// WaitWorkers - wait for workers final or timeout exit
+func (s *AppStarter) WaitWorkers(timeout time.Duration) error {
 
 	s.Wait()
 
@@ -70,7 +79,7 @@ func (s *AppStarter) WaitThreads(timeout time.Duration) error {
 	<-ctx.Done()
 
 	if err := ctx.Err(); err == context.DeadlineExceeded {
-		return fmt.Errorf("app threads stop timeout: %w", err)
+		return fmt.Errorf("app workers stop timeout: %w", err)
 	}
 
 	return nil

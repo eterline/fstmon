@@ -30,12 +30,12 @@ func newSystemError(embed string) *SystemError {
 }
 
 var (
-	ErrScrapeCpuPackage        = newSystemError("failed scrape cpu package")
-	ErrScrapeCpuMetrics        = newSystemError("failed scrape cpu metrics")
-	ErrScrapeInterfacesIO      = newSystemError("failed scrape interfaces I/O")
-	ErrScrapeSystemInfo        = newSystemError("failed scrape system info")
-	ErrScrapeMemoryMetrics     = newSystemError("failed scrape memory metrics")
-	ErrScrapeThermalMetrics    = newSystemError("failed scrape thermal metrics")
-	ErrScrapePartitionsInfo    = newSystemError("failed scrape partitions info")
-	ErrScrapePartitionsMetrics = newSystemError("failed scrape partitions metrics")
+	ErrScrapeCpuPackage     = newSystemError("failed scrape cpu package")
+	ErrScrapeCpuMetrics     = newSystemError("failed scrape cpu metrics")
+	ErrScrapeInterfacesIO   = newSystemError("failed scrape interfaces I/O")
+	ErrScrapeSystemInfo     = newSystemError("failed scrape system info")
+	ErrScrapeMemoryMetrics  = newSystemError("failed scrape memory metrics")
+	ErrScrapeThermalMetrics = newSystemError("failed scrape thermal metrics")
+	ErrScrapePartitionsInfo = newSystemError("failed scrape partitions info")
+	ErrScrapePartitionsIO   = newSystemError("failed scrape partitions I/O")
 )

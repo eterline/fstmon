@@ -8,6 +8,7 @@ import (
 
 	"github.com/eterline/fstmon/internal/domain"
 	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/utils/usecase"
 )
 
 /*
@@ -60,18 +61,19 @@ Updates are saved to the MetricSaverGeter under their respective keys.
 func (sp *ServicePooler) RunPooling(ctx context.Context) {
 	logger := log.MustLoggerFromContext(ctx)
 
-	if len(sp.jobPool) == 0 {
+	metricKeys, _, n := usecase.MapSlicesLen(sp.jobPool)
+	if n == 0 {
 		logger.Warn("no metric workers registered")
 		return
 	}
 
-	logger.Info("metric metric workers starting", "count", len(sp.jobPool))
+	logger.Info("metric metric workers starting", "count", n, "workers", metricKeys)
 
 	for key, cfg := range sp.jobPool {
 
 		wlog := logger.With(
-			"metric_key", key,
-			"interval", cfg.Interval,
+			"worker_key", key,
+			"worker_interval", cfg.Interval,
 		)
 
 		wlog.Info("metric worker start")
@@ -80,6 +82,24 @@ func (sp *ServicePooler) RunPooling(ctx context.Context) {
 		go func(key string, cfg *WorkerConfig, wlog *slog.Logger) {
 
 			defer sp.workersWg.Done()
+
+			job := func() {
+				wlog.Debug("worker start update metric")
+
+				value, err := cfg.Worker(ctx)
+				if err != nil {
+					wlog.Error("worker update metric error", "error", err)
+					return
+				}
+
+				now := time.Now()
+				wlog.Debug("worker updated metric", "update_time", now)
+
+				sp.metricSt.SaveValue(key, value, now)
+			}
+
+			job() // first start
+
 			ticker := time.NewTicker(cfg.Interval)
 			defer ticker.Stop()
 
@@ -88,25 +108,14 @@ func (sp *ServicePooler) RunPooling(ctx context.Context) {
 				case <-ctx.Done():
 					wlog.Info("metric worker shutdown")
 					return
-
 				case <-ticker.C:
-
-					wlog.Debug("worker start update metric")
-
-					value, err := cfg.Worker(ctx)
-					if err != nil {
-						wlog.Error("worker update metric error", "error", err)
-						continue
-					}
-
-					now := time.Now()
-					wlog.Debug("worker updated metric", "update_time", now)
-
-					sp.metricSt.SaveValue(key, value, now)
+					job()
 				}
 			}
+
 		}(key, cfg, wlog)
 	}
+
 }
 
 /*
