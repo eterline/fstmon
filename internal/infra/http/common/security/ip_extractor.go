@@ -4,7 +4,6 @@
 package security
 
 import (
-	"fmt"
 	"net/http"
 	"net/netip"
 	"strings"
@@ -29,16 +28,17 @@ func NewIpExtractor(headers bool) *IpExtractor {
 // If headers are enabled, it checks headers first. Otherwise, it uses RemoteAddr.
 // Returns netip.Addr and an error if parsing fails.
 func (is *IpExtractor) ExtractIP(r *http.Request) (client netip.Addr, remote netip.AddrPort, err error) {
-	rmtAp, err := Remote(r)
-	if err != nil {
-		return netip.Addr{}, netip.AddrPort{}, fmt.Errorf("ip extarctor error: %w", err)
-	}
+	rmtAp, _ := Remote(r)
+	// if err != nil {
+	// 	return netip.Addr{}, netip.AddrPort{}, fmt.Errorf("ip extarctor error: %w", err)
+	// }
 
 	if is.headers {
 		if ip, ok := headers(r); ok {
 			return ip, rmtAp, nil
 		}
 	}
+
 	return rmtAp.Addr(), rmtAp, nil
 }
 

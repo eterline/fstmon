@@ -97,7 +97,7 @@ func TestRemote(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
-	if ip.String() != "192.168.1.100" {
+	if ip.Addr().String() != "192.168.1.100" {
 		t.Errorf("expected 192.168.1.100, got %v", ip)
 	}
 
@@ -134,11 +134,11 @@ func TestExtractIP_Headers(t *testing.T) {
 			}
 
 			extractor := security.NewIpExtractor(true)
-			ip, _, err := extractor.ExtractIP(req)
+			ip, с, err := extractor.ExtractIP(req)
 			if tt.wantOk && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-			if tt.wantOk && ip.String() != tt.wantIP {
+			if tt.wantOk && с.Addr().String() != tt.wantIP {
 				t.Errorf("expected %v, got %v", tt.wantIP, ip)
 			}
 		})
