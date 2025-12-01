@@ -83,7 +83,7 @@ func TestAllowedList(t *testing.T) {
 	}
 
 	prefixes := filter.AllowedList()
-	if prefixes == nil || len(prefixes) == 0 {
+	if len(prefixes) == 0 {
 		t.Fatal("Expected non-empty prefix list")
 	}
 

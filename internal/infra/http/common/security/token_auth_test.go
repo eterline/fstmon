@@ -102,6 +102,8 @@ func TestTokenAuthProvide_TestBearer_Disabled(t *testing.T) {
 	tok := genToken(minLen)
 	provider, _ := security.NewTokenAuthProvide(minLen, tok)
 
+	_ = provider.Enabled() // stub for ide PROBLEMS system
+
 	provider = &security.TokenAuthProvide{}
 	if !provider.TestBearer("any") {
 		t.Error("Expected disabled provider to always return true")
