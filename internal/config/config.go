@@ -28,7 +28,7 @@ type Monitor struct {
 	Cpu       int `arg:"--cpu-loop" help:"Cpu metric update loop seconds"`
 	Memory    int `arg:"--memory-loop" help:"Memory update loop seconds"`
 	System    int `arg:"--system-loop" help:"System update loop seconds"`
-	Thermal   int `arg:"--partitions-loop" help:"Thermal update loop seconds"`
+	Thermal   int `arg:"--thermal-loop" help:"Thermal update loop seconds"`
 	NetworkIO int `arg:"--network-loop" help:"Network I/O update loop seconds"`
 	DiskIO    int `arg:"--partitions-loop" help:"Disk I/O update loop seconds"`
 }
