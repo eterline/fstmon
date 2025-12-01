@@ -82,8 +82,8 @@ func TestAllowedList(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	prefixes := filter.AllowedList()
-	if len(prefixes) == 0 {
+	prefixes, ok := filter.AllowedList()
+	if !ok {
 		t.Fatal("Expected non-empty prefix list")
 	}
 
@@ -101,7 +101,7 @@ func TestAllowedList(t *testing.T) {
 
 func TestAllowedList_NilPool(t *testing.T) {
 	filter := &security.SubnetFilter{}
-	if list := filter.AllowedList(); list != nil {
+	if list, ok := filter.AllowedList(); !ok {
 		t.Errorf("Expected nil AllowedList for nil pool, got %v", list)
 	}
 }

@@ -4,7 +4,7 @@
 package security
 
 import (
-	"net"
+	"fmt"
 	"net/http"
 	"net/netip"
 	"strings"
@@ -28,13 +28,18 @@ func NewIpExtractor(headers bool) *IpExtractor {
 // ExtractIP – extracts the IP address from the HTTP request.
 // If headers are enabled, it checks headers first. Otherwise, it uses RemoteAddr.
 // Returns netip.Addr and an error if parsing fails.
-func (is *IpExtractor) ExtractIP(r *http.Request) (netip.Addr, error) {
+func (is *IpExtractor) ExtractIP(r *http.Request) (client netip.Addr, remote netip.AddrPort, err error) {
+	rmtAp, err := Remote(r)
+	if err != nil {
+		return netip.Addr{}, netip.AddrPort{}, fmt.Errorf("ip extarctor error: %w", err)
+	}
+
 	if is.headers {
 		if ip, ok := headers(r); ok {
-			return ip, nil
+			return ip, rmtAp, nil
 		}
 	}
-	return Remote(r)
+	return rmtAp.Addr(), rmtAp, nil
 }
 
 // headers – tries to extract the IP from HTTP headers.
@@ -58,18 +63,13 @@ func headers(r *http.Request) (netip.Addr, bool) {
 
 // Remote – extracts the IP from r.RemoteAddr.
 // Returns an error if RemoteAddr is invalid or cannot be parsed.
-func Remote(r *http.Request) (netip.Addr, error) {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
+func Remote(r *http.Request) (netip.AddrPort, error) {
+	addrPort, err := netip.ParseAddrPort(r.RemoteAddr)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.AddrPort{}, err
 	}
 
-	ip, err := netip.ParseAddr(host)
-	if err != nil {
-		return netip.Addr{}, err
-	}
-
-	return ip, nil
+	return addrPort, nil
 }
 
 // ParseXRealIP – parses the 'X-Real-IP' header (used by Nginx reverse proxy).

@@ -78,9 +78,10 @@ AllowedList – returns the list of allowed prefixes as netip.Prefix slices.
 
 	Returns nil if no pool is defined.
 */
-func (f *SubnetFilter) AllowedList() []netip.Prefix {
+func (f *SubnetFilter) AllowedList() ([]netip.Prefix, bool) {
 	if f.pool == nil {
-		return nil
+		return nil, false
 	}
-	return f.pool.Prefixes()
+	pfxs := f.pool.Prefixes()
+	return pfxs, len(pfxs) > 0
 }

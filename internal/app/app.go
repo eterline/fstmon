@@ -6,6 +6,8 @@ package app
 
 import (
 	"context"
+	"io"
+	"os"
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
@@ -32,13 +34,15 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	ctx := root.Context
 	log := log.MustLoggerFromContext(ctx)
 
+	// ========================================================
+
 	log.Info("starting app", "commit", flags.CommitHash, "version", flags.Version)
 	defer func() {
 		wt := root.WorkTime()
 		log.Info("exit from app", "running_time", wt)
 	}()
 
-	// ============================
+	// ========================================================
 
 	proc, err := procfs.NewDefaultFS()
 	if err != nil {
@@ -54,7 +58,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	log.Warn("token auth setup", "enabled", tokenAuth.Enabled(), "registered", len(cfg.AuthToken))
 
-	// ============================
+	// ========================================================
 
 	log.Info("in-memory pooler store initialization")
 	mStore := metricstore.NewMetricInMemoryStore()
@@ -65,7 +69,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	metricPooling := monitor.NewServicePooler(mStore) // Metric pooling service
 
-	// ============================
+	// ========================================================
 
 	// CPU usage
 	hMtCpu := system.NewHardwareMetricCPU(time.Second)
@@ -114,7 +118,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		wrapJob(hMtThermal.ScrapeThermalMetrics), "thermal", cfg.ThermalDuration(),
 	)
 
-	// ============================
+	// ========
 
 	root.WrapWorker(func() {
 		metricPooling.RunPooling(ctx)
@@ -122,7 +126,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		log.Info("metric pooling stopped")
 	})
 
-	// ============================
+	// ========================================================
 
 	rootMux := chi.NewMux()
 
@@ -130,22 +134,43 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	rootMux.NotFound(api.HandleNotFound)
 	rootMux.MethodNotAllowed(api.HandleNotAllowedMethod)
 
-	rootMux.Use(middleware.NoCacheControl)
-	rootMux.Use(middleware.RequestLoggerWrap(log))
-	rootMux.Use(middleware.AllowedHosts(ctx, cfg.AllowedHosts))
-	rootMux.Use(middleware.BearerAuth(ctx, tokenAuth)) // lookup at NewTokenAuthProvide upper
+	ipExtractor := security.NewIpExtractor(false)
 
-	// ============================
+	netFilter, err := security.NewSubnetFilter(cfg.AllowedSubnets)
+	if err != nil {
+		log.Warn("allowed subnets error", "error", err)
+	}
+
+	if l, ok := netFilter.AllowedList(); ok {
+		log.Warn("setup allowed subnets", "subnets", l)
+	}
+
+	file := "access.log"
+	acLog, ok := accesLogFile(file)
+	if ok {
+		log.Info("access log file initalized", "file", file)
+	}
+	defer acLog.Close()
+
+	// root middlewares
+	rootMux.Use(middleware.RootMiddleware(ctx, ipExtractor, acLog, true))
+	rootMux.Use(middleware.SecureHeaders)
+	rootMux.Use(middleware.SourceSubnetsAllow(ctx, netFilter))
+	rootMux.Use(middleware.AllowedHosts(cfg.AllowedHosts))
+	rootMux.Use(middleware.BearerAuth(tokenAuth, ""))
+	rootMux.Use(middleware.RequestLoggerWrap(log))
+
+	// ========
 
 	metricRouter := chi.NewRouter()
 	h := httphomepage.New(metricPooling)
 
 	metricRouter.Route("/homepage",
 		func(r chi.Router) {
-			r.Get("/network", h.HandleNetwork)
-			r.Get("/memory", h.HandleMemory)
 			r.Get("/system", h.HandleSystem)
 			r.Get("/cpu", h.HandleCpu)
+			r.Get("/memory", h.HandleMemory)
+			r.Get("/network", h.HandleNetwork)
 			r.Get("/partitions", h.HandlePartitions)
 			r.Get("/diskio", h.HandleDiskIO)
 		},
@@ -160,9 +185,6 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		server.WithTLS(server.NewServerTlsConfig()),
 		server.WithDisabledDefaultHttp2Map(),
 	)
-	defer srv.Close()
-
-	// ============================
 
 	root.WrapWorker(func() {
 		err := srv.Run(ctx, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
@@ -170,6 +192,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 			log.Error("server run error", "error", err)
 		}
 	})
+	defer srv.Close()
 
 	// ============================
 	root.WaitWorkers(15 * time.Second)
@@ -179,4 +202,17 @@ func wrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {
 	return func(ctx context.Context) (any, error) {
 		return f(ctx)
 	}
+}
+
+func accesLogFile(name string) (io.WriteCloser, bool) {
+	if name == "" {
+		return nil, false
+	}
+
+	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, false
+	}
+
+	return f, true
 }

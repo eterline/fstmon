@@ -309,6 +309,7 @@ func (s *PoolIPBuilder) PoolIP() (*PoolIP, error) {
 	ret := &PoolIP{
 		rr: append([]PoolRange{}, s.in...),
 	}
+
 	if len(s.errs) == 0 {
 		return ret, nil
 	} else {

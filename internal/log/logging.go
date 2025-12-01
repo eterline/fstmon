@@ -8,40 +8,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
-
-	"github.com/eterline/fstmon/internal/domain"
 )
-
-type MiddlewareWithReqInfoWrapping struct {
-	next slog.Handler
-}
-
-func NewLoggerWithReqInfoWrapping(next slog.Handler) *MiddlewareWithReqInfoWrapping {
-	return &MiddlewareWithReqInfoWrapping{next: next}
-}
-
-func (mrw *MiddlewareWithReqInfoWrapping) Enabled(ctx context.Context, rec slog.Level) bool {
-	return mrw.next.Enabled(ctx, rec)
-}
-
-func (mrw *MiddlewareWithReqInfoWrapping) Handle(ctx context.Context, rec slog.Record) error {
-	if c, ok := domain.RequestInfoFromContext(ctx); ok {
-		rec.Add("request_duration_ms", c.RequestDuration().Milliseconds())
-		rec.Add("client", c.Client)
-		rec.Add("source_ip", c.Source.Addr())
-		rec.Add("source_port", c.Source.Port())
-	}
-
-	return mrw.next.Handle(ctx, rec)
-}
-
-func (mrw *MiddlewareWithReqInfoWrapping) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &MiddlewareWithReqInfoWrapping{next: mrw.next.WithAttrs(attrs)}
-}
-
-func (mrw *MiddlewareWithReqInfoWrapping) WithGroup(name string) slog.Handler {
-	return &MiddlewareWithReqInfoWrapping{next: mrw.next.WithGroup(name)}
-}
 
 // InitLogger – create singletone style structure logger
 func InitLogger(level string, json bool) {
@@ -61,8 +28,6 @@ func NewLogger(level string, json bool) *slog.Logger {
 	} else {
 		h = slog.NewTextHandler(os.Stdout, opt)
 	}
-
-	h = NewLoggerWithReqInfoWrapping(h)
 
 	return slog.New(h)
 }
