@@ -146,14 +146,18 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	var acLog io.WriteCloser
 
-	acLog, acLogOk := cfg.AccessLog()
+	acLog, err, acLogOk := cfg.AccessLog()
 	if acLogOk {
-		log.Info("access log file initalized", "file", cfg.AccessLogFile)
+		if err != nil {
+			log.Info("access log file initalize error", "error", err)
+		} else {
+			log.Info("access log file initalized", "file", cfg.AccessLogFile)
+		}
 		defer acLog.Close()
 	}
 
 	// root middlewares
-	rootMux.Use(middleware.RootMiddleware(ctx, ipExtractor, acLog, cfg.Log.AccessLogEnable))
+	rootMux.Use(middleware.RootMiddleware(ctx, ipExtractor, acLog))
 	rootMux.Use(middleware.SecureHeaders)
 	rootMux.Use(middleware.SourceSubnetsAllow(ctx, netFilter))
 	rootMux.Use(middleware.AllowedHosts(cfg.AllowedHosts))

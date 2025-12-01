@@ -30,8 +30,7 @@ task run
 |--------------------------------------|-------|---------------------------------------------------------|-------------|
 | `--log-level LOG-LEVEL`              |       | Logging level: `debug` \| `info` \| `warn` \| `error`   | `info`      |
 | `--log-json`                         | `-j`  | Output logs in JSON format                              | `false`     |
-| `--access-log ACCESS-LOG`            |       | Path to access log file (empty → stdout)                | *(empty)*   |
-| `--access-log-enable`                |       | Enable access logging                                   | `false`     |
+| `--access-log ACCESS-LOG`            |       | Path to access log file: `file` \| `stdout` \| `none`   | `none`      |
 | `--listen LISTEN`                    | `-l`  | Server listen address                                   | `:3000`     |
 | `--certfile CERTFILE`                | `-c`  | TLS certificate file                                    | *(none)*    |
 | `--keyfile KEYFILE`                  | `-k`  | TLS private key file                                    | *(none)*    |

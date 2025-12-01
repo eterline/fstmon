@@ -25,10 +25,9 @@ var (
 
 	cfg = config.Configuration{
 		Log: config.Log{
-			LogLevel:        "info",
-			JSONlog:         false,
-			AccessLogFile:   "",
-			AccessLogEnable: false,
+			LogLevel:      "info",
+			JSONlog:       false,
+			AccessLogFile: "stdout",
 		},
 		Server: config.Server{
 			Listen:     ":3000",

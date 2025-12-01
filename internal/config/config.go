@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/alexflint/go-arg"
@@ -59,10 +60,9 @@ func (m Monitor) DiskIODuration() time.Duration {
 
 type (
 	Log struct {
-		LogLevel        string `arg:"--log-level" help:"Logging level: debug|info|warn|error"`
-		JSONlog         bool   `arg:"--log-json,-j" help:"Set logs to JSON format"`
-		AccessLogFile   string `arg:"--access-log" help:"Set access log file (if empty > stdout)"`
-		AccessLogEnable bool   `arg:"--access-log-enable" help:"Enable access logging"`
+		LogLevel      string `arg:"--log-level" help:"Logging level: debug|info|warn|error"`
+		JSONlog       bool   `arg:"--log-json,-j" help:"Set logs to JSON format"`
+		AccessLogFile string `arg:"--access-log" help:"Set access log file"`
 	}
 
 	Server struct {
@@ -86,20 +86,26 @@ type (
 	}
 )
 
-func (l Log) AccessLog() (io.WriteCloser, bool) {
-	if !l.AccessLogEnable || l.AccessLogFile == "" {
-		return nil, false
+func (l Log) AccessLog() (wr io.WriteCloser, err error, wrEnable bool) {
+	if strings.ToLower(l.AccessLogFile) == "none" {
+		return nil, nil, false
+	}
+
+	out := io.WriteCloser(os.Stdout)
+
+	if strings.ToLower(l.AccessLogFile) == "stdout" {
+		return out, nil, true
 	}
 
 	dir := filepath.Dir(l.AccessLogFile)
 	ds, err := os.Lstat(dir)
 	if err != nil {
-		return nil, false
+		return out, err, true
 	}
 
 	// symlink attack prevent
 	if (ds.Mode() & os.ModeSymlink) != 0 {
-		return nil, false
+		return out, err, true
 	}
 
 	fd, err := unix.Open(
@@ -108,10 +114,12 @@ func (l Log) AccessLog() (io.WriteCloser, bool) {
 		0644,
 	)
 	if err != nil {
-		return nil, false
+		return out, err, true
 	}
 
-	return os.NewFile(uintptr(fd), l.AccessLogFile), true
+	out = os.NewFile(uintptr(fd), l.AccessLogFile)
+
+	return out, nil, true
 }
 
 var (

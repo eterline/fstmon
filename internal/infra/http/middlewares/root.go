@@ -85,7 +85,7 @@ func (rec *ResponseRecorder) WriteHeader(status int) {
 
 // ================================================================================
 
-func RootMiddleware(ctx context.Context, ipExt IpExtractor, accessWriter io.Writer, logAccess bool) func(http.Handler) http.Handler {
+func RootMiddleware(ctx context.Context, ipExt IpExtractor, accessWriter io.Writer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rootLog := log.MustLoggerFromContext(ctx)
@@ -125,19 +125,17 @@ func RootMiddleware(ctx context.Context, ipExt IpExtractor, accessWriter io.Writ
 
 			next.ServeHTTP(rec, r.WithContext(ctx))
 
-			if logAccess {
-				root.AccessLogger.Log(
-					"method", root.Method,
-					"path", root.Path,
-					"status_code", rec.Status,
-					"duration_ms", root.Duration().Milliseconds(),
-					"client_ip", root.ClientIP.String(),
-					"user_agent", root.UserAgent,
-					"source_ip", root.SourceIP.Addr().String(),
-					"source_port", root.SourceIP.Port(),
-					"encodings", root.EncodingList,
-				)
-			}
+			root.AccessLogger.Log(
+				"method", root.Method,
+				"path", root.Path,
+				"status_code", rec.Status,
+				"duration_ms", root.Duration().Milliseconds(),
+				"client_ip", root.ClientIP.String(),
+				"user_agent", root.UserAgent,
+				"source_ip", root.SourceIP.Addr().String(),
+				"source_port", root.SourceIP.Port(),
+				"encodings", root.EncodingList,
+			)
 		})
 	}
 }
