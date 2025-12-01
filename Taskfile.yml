@@ -96,7 +96,7 @@ tasks:
   build:
     desc: "Build production-ready binary with embedded version info"
     silent: true
-    deps: [clean, full-test]
+    deps: [clean, tests]
     cmds:
       - echo "=== Building Production Binary ==="
       - |

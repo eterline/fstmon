@@ -7,7 +7,6 @@ package app
 import (
 	"context"
 	"io"
-	"os"
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
@@ -145,15 +144,16 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		log.Warn("setup allowed subnets", "subnets", l)
 	}
 
-	file := "access.log"
-	acLog, ok := accesLogFile(file)
-	if ok {
-		log.Info("access log file initalized", "file", file)
+	var acLog io.WriteCloser
+
+	acLog, acLogOk := cfg.AccessLog()
+	if acLogOk {
+		log.Info("access log file initalized", "file", cfg.AccessLogFile)
+		defer acLog.Close()
 	}
-	defer acLog.Close()
 
 	// root middlewares
-	rootMux.Use(middleware.RootMiddleware(ctx, ipExtractor, acLog, true))
+	rootMux.Use(middleware.RootMiddleware(ctx, ipExtractor, acLog, cfg.Log.AccessLogEnable))
 	rootMux.Use(middleware.SecureHeaders)
 	rootMux.Use(middleware.SourceSubnetsAllow(ctx, netFilter))
 	rootMux.Use(middleware.AllowedHosts(cfg.AllowedHosts))
@@ -202,17 +202,4 @@ func wrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {
 	return func(ctx context.Context) (any, error) {
 		return f(ctx)
 	}
-}
-
-func accesLogFile(name string) (io.WriteCloser, bool) {
-	if name == "" {
-		return nil, false
-	}
-
-	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return nil, false
-	}
-
-	return f, true
 }

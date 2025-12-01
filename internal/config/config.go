@@ -5,11 +5,13 @@
 package config
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/alexflint/go-arg"
+	"golang.org/x/sys/unix"
 )
 
 func clampSeconds(sec, min, max int) time.Duration {
@@ -57,8 +59,10 @@ func (m Monitor) DiskIODuration() time.Duration {
 
 type (
 	Log struct {
-		LogLevel string `arg:"--log-level" help:"Logging level: debug|info|warn|error"`
-		JSONlog  bool   `arg:"--log-json,-j" help:"Set logs to JSON format"`
+		LogLevel        string `arg:"--log-level" help:"Logging level: debug|info|warn|error"`
+		JSONlog         bool   `arg:"--log-json,-j" help:"Set logs to JSON format"`
+		AccessLogFile   string `arg:"--access-log" help:"Set access log file (if empty > stdout)"`
+		AccessLogEnable bool   `arg:"--access-log-enable" help:"Enable access logging"`
 	}
 
 	Server struct {
@@ -81,6 +85,34 @@ type (
 		Monitor
 	}
 )
+
+func (l Log) AccessLog() (io.WriteCloser, bool) {
+	if !l.AccessLogEnable || l.AccessLogFile == "" {
+		return nil, false
+	}
+
+	dir := filepath.Dir(l.AccessLogFile)
+	ds, err := os.Lstat(dir)
+	if err != nil {
+		return nil, false
+	}
+
+	// symlink attack prevent
+	if (ds.Mode() & os.ModeSymlink) != 0 {
+		return nil, false
+	}
+
+	fd, err := unix.Open(
+		l.AccessLogFile,
+		unix.O_WRONLY|unix.O_APPEND|unix.O_CREAT|unix.O_NOFOLLOW,
+		0644,
+	)
+	if err != nil {
+		return nil, false
+	}
+
+	return os.NewFile(uintptr(fd), l.AccessLogFile), true
+}
 
 var (
 	parserConfig = arg.Config{
