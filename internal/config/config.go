@@ -23,12 +23,12 @@ func clampSeconds(sec, min, max int) time.Duration {
 }
 
 type Monitor struct {
-	Cpu          int `arg:"--cpu-loop" help:"Cpu metric update loop seconds"`
-	NetworkIO    int `arg:"--network-loop" help:"Network I/O update loop seconds"`
-	Memory       int `arg:"--memory-loop" help:"Memory update loop seconds"`
-	PartitionsIO int `arg:"--partitions-loop" help:"Partitions I/O update loop seconds"`
-	System       int `arg:"--system-loop" help:"System update loop seconds"`
-	Thermal      int `arg:"--partitions-loop" help:"Thermal update loop seconds"`
+	Cpu       int `arg:"--cpu-loop" help:"Cpu metric update loop seconds"`
+	Memory    int `arg:"--memory-loop" help:"Memory update loop seconds"`
+	System    int `arg:"--system-loop" help:"System update loop seconds"`
+	Thermal   int `arg:"--partitions-loop" help:"Thermal update loop seconds"`
+	NetworkIO int `arg:"--network-loop" help:"Network I/O update loop seconds"`
+	DiskIO    int `arg:"--partitions-loop" help:"Disk I/O update loop seconds"`
 }
 
 func (m Monitor) CpuDuration() time.Duration {
@@ -43,16 +43,16 @@ func (m Monitor) MemorykDuration() time.Duration {
 	return clampSeconds(m.Memory, 5, 120)
 }
 
-func (m Monitor) PartitionsIoDuration() time.Duration {
-	return clampSeconds(m.PartitionsIO, 5, 120)
-}
-
 func (m Monitor) SystemDuration() time.Duration {
 	return clampSeconds(m.System, 15, 300)
 }
 
 func (m Monitor) ThermalDuration() time.Duration {
 	return clampSeconds(m.Thermal, 15, 300)
+}
+
+func (m Monitor) DiskIODuration() time.Duration {
+	return clampSeconds(m.DiskIO, 10, 300)
 }
 
 type (
@@ -70,7 +70,7 @@ type (
 	Secure struct {
 		AllowedHosts   []string `arg:"--sni,-h" help:"Server allowed request hosts"`
 		AllowedSubnets []string `arg:"--subnets,-s" help:"Server allowed source subnets/IPs"`
-		AuthToken      string   `arg:"--token,-t,env:TOKEN" help:"Server auth token string"`
+		AuthToken      []string `arg:"--token,-t,env:TOKEN" help:"Server auth token string"`
 		ParseIpHeader  bool     `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
 	}
 

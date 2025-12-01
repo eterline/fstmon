@@ -43,13 +43,13 @@ func (mrw *MiddlewareWithReqInfoWrapping) WithGroup(name string) slog.Handler {
 	return &MiddlewareWithReqInfoWrapping{next: mrw.next.WithGroup(name)}
 }
 
-// InitLogger - create singletone style structure logger
+// InitLogger – create singletone style structure logger
 func InitLogger(level string, json bool) {
 	logger := NewLogger(level, json)
 	slog.SetDefault(logger)
 }
 
-// InitLogger - create new structure logger
+// InitLogger – create new structure logger
 func NewLogger(level string, json bool) *slog.Logger {
 	opt := &slog.HandlerOptions{
 		Level: selectLogLevel(level),
@@ -74,12 +74,12 @@ const (
 	loggerCtxKey loggerContextKey = iota
 )
 
-// WrapLoggerToContext - wrap logger to parent context
+// WrapLoggerToContext – wrap logger to parent context
 func WrapLoggerToContext(ctx context.Context, logger *slog.Logger) context.Context {
 	return context.WithValue(ctx, loggerCtxKey, logger)
 }
 
-// LoggerFromContext - unwrap logger from context
+// LoggerFromContext – unwrap logger from context
 func LoggerFromContext(ctx context.Context) (logger *slog.Logger, ok bool) {
 	l, ok := ctx.Value(loggerCtxKey).(*slog.Logger)
 	if ok {
@@ -88,7 +88,7 @@ func LoggerFromContext(ctx context.Context) (logger *slog.Logger, ok bool) {
 	return nil, false
 }
 
-// MustLoggerFromContext - unwrap logger from context
+// MustLoggerFromContext – unwrap logger from context
 func MustLoggerFromContext(ctx context.Context) (logger *slog.Logger) {
 	l, ok := ctx.Value(loggerCtxKey).(*slog.Logger)
 	if ok {

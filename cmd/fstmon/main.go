@@ -36,15 +36,15 @@ var (
 		Secure: config.Secure{
 			AllowedSubnets: []string{},
 			AllowedHosts:   []string{},
-			AuthToken:      "",
+			AuthToken:      []string{},
 		},
 		Monitor: config.Monitor{
-			Cpu:          10,
-			NetworkIO:    10,
-			Memory:       10,
-			System:       20,
-			PartitionsIO: 10,
-			Thermal:      20,
+			Cpu:       10,
+			Memory:    10,
+			System:    20,
+			Thermal:   20,
+			NetworkIO: 10,
+			DiskIO:    10,
 		},
 	}
 )

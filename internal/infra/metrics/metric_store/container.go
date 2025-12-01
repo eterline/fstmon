@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package metricstore
 
 import (
@@ -10,7 +13,7 @@ type ValueStore[T any] struct {
 	pool sync.Pool
 }
 
-// NewValueStore - creates value container (parallel safe)
+// NewValueStore – creates value container (parallel safe)
 func NewValueStore[T any]() *ValueStore[T] {
 	return &ValueStore[T]{
 		pool: sync.Pool{
@@ -22,7 +25,7 @@ func NewValueStore[T any]() *ValueStore[T] {
 	}
 }
 
-// Save - put object to container
+// Save – put object to container
 func (s *ValueStore[T]) Save(v T) {
 	newVal := s.pool.Get().(*T)
 	*newVal = v
@@ -34,13 +37,13 @@ func (s *ValueStore[T]) Save(v T) {
 	}
 }
 
-// Get - return object from container
+// Get – return object from container
 func (s *ValueStore[T]) Get() T {
 	val := s.ptr.Load()
 	return *val
 }
 
-// Clear - free container
+// Clear – free container
 func (s *ValueStore[T]) Clear() {
 	old := s.ptr.Swap(nil)
 	if old != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package domain
 
 import "time"
@@ -11,7 +14,7 @@ type MetricState struct {
 // ============================ CPU domain structures ============================
 
 /*
-CpuCoreInfo - static information about a single CPU core
+CpuCoreInfo – static information about a single CPU core
 
 	such as its physical package, core ID, number of siblings, and cache size.
 */
@@ -23,7 +26,7 @@ type CpuCoreInfo struct {
 }
 
 /*
-CpuPackage - static information about the CPU package, including
+CpuPackage – static information about the CPU package, including
 	vendor, model name, microcode version, CPU flags, and its cores.
 */
 
@@ -38,7 +41,7 @@ type CpuPackage struct {
 // =======
 
 /*
-CpuCoreMetrics - instantaneous dynamic metrics of a single CPU core,
+CpuCoreMetrics – instantaneous dynamic metrics of a single CPU core,
 
 	including load percentage and current frequency in MHz.
 */
@@ -48,7 +51,7 @@ type CpuCoreMetrics struct {
 }
 
 /*
-CpuMetrics - current dynamic metrics for all CPU cores, including the average CPU load across all cores.
+CpuMetrics – current dynamic metrics for all CPU cores, including the average CPU load across all cores.
 */
 type CpuMetrics struct {
 	Average CpuCoreMetrics   `json:"average"` // Average metrics across all cores
@@ -58,7 +61,7 @@ type CpuMetrics struct {
 // ============================ Networking domain structures ============================
 
 /*
-NetworkingIO - instantaneous counters and speeds of a single
+NetworkingIO – instantaneous counters and speeds of a single
 
 	network interface, including received/sent bytes, packets, and errors.
 */
@@ -73,7 +76,7 @@ type InterfaceIO struct {
 }
 
 /*
-InterfacesIO - network interface names to their instantaneous.
+InterfacesIO – network interface names to their instantaneous.
 */
 type InterfacesIOMap map[string]InterfaceIO
 
@@ -92,7 +95,7 @@ type SystemInfo struct {
 // =======
 
 /*
-MemoryMetric - system memory metrics.
+MemoryMetric – system memory metrics.
 */
 type MemoryMetrics struct {
 	Total     uint64 `json:"total"`     // total physical RAM (bytes)
@@ -112,7 +115,7 @@ type MemoryMetrics struct {
 // =======
 
 /*
-ThermalMetric - an instantaneous thermal state of a sensor.
+ThermalMetric – an instantaneous thermal state of a sensor.
 It includes current, critical, and maximum observed temperatures.
 */
 type ThermalMetrics struct {
@@ -122,35 +125,16 @@ type ThermalMetrics struct {
 }
 
 /*
-ThermalMetricMap - sensor identifiers to their instantaneous thermal metrics.
+ThermalMetricMap – sensor identifiers to their instantaneous thermal metrics.
 */
 type ThermalMetricsMap map[string]ThermalMetrics
 
 // ============================ Storage domain structures ============================
 
 /*
-PartitionInfo - static information about a filesystem partition.
-
-	These attributes describe the identity and configuration of the partition, and do not change over time.
+PartitionUsage – dynamic, time-sensitive metrics of a filesystem partition such as space usage and inode usage.
 */
-type PartitionInfo struct {
-	Device     string   `json:"device"`     // Device path, e.g. "/dev/sda1"
-	Mount      string   `json:"mount"`      // Mount point, e.g. "/"
-	Filesystem string   `json:"filesystem"` // Filesystem type, e.g. "ext4"
-	Options    []string `json:"options"`    // Mount options
-}
-
-/*
-PartitionsInfo - a map of mount point to static partition info.
-*/
-type PartitionsInfo []PartitionInfo
-
-// =======
-
-/*
-PartitionMetrics - dynamic, time-sensitive metrics of a filesystem partition such as space usage and inode usage.
-*/
-type PartitionMetrics struct {
+type PartitionUsage struct {
 	TotalBytes  uint64  `json:"total"`        // Total bytes
 	UsedBytes   uint64  `json:"used"`         // Used bytes
 	FreeBytes   uint64  `json:"free"`         // Free bytes
@@ -162,10 +146,28 @@ type PartitionMetrics struct {
 	InodesUsedPercent float64 `json:"inodes_used_percent"` // Inode usage percentage
 }
 
-type PartitionMetricsMap map[string]PartitionMetrics
+/*
+PartitionInfo – static information about a filesystem partition.
 
-// PartitionIO - I/O statistics for a partition.
-type PartitionIO struct {
+	These attributes describe the identity and configuration of the partition, and do not change over time.
+*/
+type Partition struct {
+	Device     string          `json:"device"`     // Device path, e.g. "/dev/sda1"
+	Mount      string          `json:"mount"`      // Mount point, e.g. "/"
+	Filesystem string          `json:"filesystem"` // Filesystem type, e.g. "ext4"
+	Options    []string        `json:"options"`    // Mount options
+	Usage      *PartitionUsage `json:"usage"`      // Mount options
+}
+
+/*
+PartitionsInfo – a map of mount point to static partition info.
+*/
+type Partitions []Partition
+
+// =======
+
+// DiskIO – I/O statistics for a partition.
+type DiskIO struct {
 	IopsInProgress uint64 `json:"iops_in_progress"` // Number of I/O operations currently in progress
 
 	Ops       IO[uint64] `json:"ops"`
@@ -181,24 +183,24 @@ type PartitionIO struct {
 	WeightedIO time.Duration     `json:"weighted_io"` // Weighted I/O time
 }
 
-type PartitionIOMap map[string]PartitionIO
+type DiskIOMap map[string]DiskIO
 
-// SetReadTime - sets the read time from time.Duration
-func (p *PartitionIO) SetReadTime(ms uint64) {
+// SetReadTime – sets the read time from time.Duration
+func (p *DiskIO) SetReadTime(ms uint64) {
 	p.Time.RX = time.Millisecond * time.Duration(ms)
 }
 
-// SetWriteTime - sets the write time from time.Duration
-func (p *PartitionIO) SetWriteTime(ms uint64) {
+// SetWriteTime – sets the write time from time.Duration
+func (p *DiskIO) SetWriteTime(ms uint64) {
 	p.Time.TX = time.Millisecond * time.Duration(ms)
 }
 
-// SetTotalTime - sets the total I/O time from time.Duration
-func (p *PartitionIO) SetTotalTime(ms uint64) {
+// SetTotalTime – sets the total I/O time from time.Duration
+func (p *DiskIO) SetTotalTime(ms uint64) {
 	p.IoTime = time.Millisecond * time.Duration(ms)
 }
 
-// SetWeightedIOTime - sets the weighted I/O time from time.Duration
-func (p *PartitionIO) SetWeightedIOTime(ms uint64) {
+// SetWeightedIOTime – sets the weighted I/O time from time.Duration
+func (p *DiskIO) SetWeightedIOTime(ms uint64) {
 	p.WeightedIO = time.Millisecond * time.Duration(ms)
 }

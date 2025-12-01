@@ -10,7 +10,9 @@ import (
 
 	"github.com/eterline/fstmon/internal/config"
 	"github.com/eterline/fstmon/internal/infra/http/common/api"
+	"github.com/eterline/fstmon/internal/infra/http/common/security"
 	httphomepage "github.com/eterline/fstmon/internal/infra/http/homepage"
+	middleware "github.com/eterline/fstmon/internal/infra/http/middlewares"
 	"github.com/eterline/fstmon/internal/infra/http/server"
 	metricstore "github.com/eterline/fstmon/internal/infra/metrics/metric_store"
 	"github.com/eterline/fstmon/internal/infra/metrics/system"
@@ -40,76 +42,79 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	proc, err := procfs.NewDefaultFS()
 	if err != nil {
-		log.Error("procfs init error", "error", err)
+		log.Error("procfs initialization error", "error", err)
 		root.MustStopApp(1)
 	}
 
-	// tokenAuth, err := security.NewTokenAuthProvide(security.PolicyMid, cfg.AuthToken)
-	// if err != nil {
-	// 	log.Error("token auth initialization error", "error", err)
-	// 	root.MustStopApp(1)
-	// }
+	tokenAuth, err := security.NewTokenAuthProvide(security.PolicyMid, cfg.AuthToken...)
+	if err != nil {
+		log.Error("token auth initialization error", "error", err)
+		root.MustStopApp(1)
+	}
+
+	log.Warn("token auth setup", "enabled", tokenAuth.Enabled(), "registered", len(cfg.AuthToken))
 
 	// ============================
 
-	log.Info("in-memory store init")
+	log.Info("in-memory pooler store initialization")
 	mStore := metricstore.NewMetricInMemoryStore()
 	defer func() {
-		log.Info("in-memory store closed")
 		mStore.Close()
+		log.Info("in-memory pooler store closed")
 	}()
 
 	metricPooling := monitor.NewServicePooler(mStore) // Metric pooling service
 
-	// ===========
+	// ============================
 
 	// CPU usage
 	hMtCpu := system.NewHardwareMetricCPU(time.Second)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtCpu.ScrapeCpuMetrics), "cpu_usage", cfg.CpuDuration(),
+		wrapJob(hMtCpu.ScrapeCpuMetrics), "cpu_usage", cfg.CpuDuration(),
 	)
 
 	// CPU summary info
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtCpu.ScrapeCpuPackage), "cpu", time.Minute,
+		wrapJob(hMtCpu.ScrapeCpuPackage), "cpu", time.Minute,
 	)
 
 	// Network interfaces I/O
 	hMtNet := system.NewHardwareMetricNetwork(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtNet.ScrapeInterfacesIO), "net_io", cfg.NetworkIoDuration(),
+		wrapJob(hMtNet.ScrapeInterfacesIO), "net_io", cfg.NetworkIoDuration(),
 	)
 
 	// Memory stats
 	hMtMem := system.NewHardwareMetricMemory(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtMem.ScrapeMemoryMetrics), "memory", cfg.MemorykDuration(),
+		wrapJob(hMtMem.ScrapeMemoryMetrics), "memory", cfg.MemorykDuration(),
+	)
+
+	hMtParts := system.NewHardwareMetricPartitions(proc)
+
+	// Disk I/O metrics
+	metricPooling.AddMetricPooling(
+		wrapJob(hMtParts.ScrapeDiskIO), "disk_io", cfg.DiskIODuration(),
 	)
 
 	// Partitions static info
-	hMtParts := system.NewHardwareMetricPartitions(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtParts.ScrapePartitionsInfo), "partitions", time.Minute,
-	)
-
-	// Partitions I/O metrics
-	metricPooling.AddMetricPooling(
-		WrapJob(hMtParts.ScrapePartitionIO), "partitions_io", cfg.PartitionsIoDuration(),
+		wrapJob(hMtParts.ScrapePartitions), "partitions", time.Minute,
 	)
 
 	// System info (loadavg, uptime, procs, etc.)
 	hMtSystem := system.NewHardwareMetricSystem(proc)
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtSystem.ScrapeSystemInfo), "system", cfg.SystemDuration(),
+		wrapJob(hMtSystem.ScrapeSystemInfo), "system", cfg.SystemDuration(),
 	)
 
 	// Thermal sensors
 	hMtThermal := system.NewHardwareThermalMetrics()
 	metricPooling.AddMetricPooling(
-		WrapJob(hMtThermal.ScrapeThermalMetrics), "thermal", cfg.ThermalDuration(),
+		wrapJob(hMtThermal.ScrapeThermalMetrics), "thermal", cfg.ThermalDuration(),
 	)
 
-	// ===========
+	// ============================
 
 	root.WrapWorker(func() {
 		metricPooling.RunPooling(ctx)
@@ -120,15 +125,20 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	// ============================
 
 	rootMux := chi.NewMux()
+
+	// change default handlers
 	rootMux.NotFound(api.HandleNotFound)
 	rootMux.MethodNotAllowed(api.HandleNotAllowedMethod)
 
+	rootMux.Use(middleware.NoCacheControl)
+	rootMux.Use(middleware.RequestLoggerWrap(log))
+	rootMux.Use(middleware.AllowedHosts(ctx, cfg.AllowedHosts))
+	rootMux.Use(middleware.BearerAuth(ctx, tokenAuth)) // lookup at NewTokenAuthProvide upper
+
+	// ============================
+
 	metricRouter := chi.NewRouter()
-
-	// =========
-
-	// TODO:
-	h := httphomepage.New(metricPooling, log)
+	h := httphomepage.New(metricPooling)
 
 	metricRouter.Route("/homepage",
 		func(r chi.Router) {
@@ -136,24 +146,20 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 			r.Get("/memory", h.HandleMemory)
 			r.Get("/system", h.HandleSystem)
 			r.Get("/cpu", h.HandleCpu)
+			r.Get("/partitions", h.HandlePartitions)
+			r.Get("/diskio", h.HandleDiskIO)
 		},
 	)
-
-	// =========
-
-	metricRouter.Route("/flugel",
-		func(r chi.Router) {
-			// TODO: wiil be later
-		},
-	)
-
-	// =========
 
 	rootMux.Mount("/metric", metricRouter)
 
 	// ============================
 
-	srv := server.NewServer(rootMux, server.WithTLS(server.NewServerTlsConfig()))
+	srv := server.NewServer(
+		rootMux,
+		server.WithTLS(server.NewServerTlsConfig()),
+		server.WithDisabledDefaultHttp2Map(),
+	)
 	defer srv.Close()
 
 	// ============================
@@ -169,7 +175,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	root.WaitWorkers(15 * time.Second)
 }
 
-func WrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {
+func wrapJob[T any](f func(context.Context) (T, error)) monitor.UpdateWorker {
 	return func(ctx context.Context) (any, error) {
 		return f(ctx)
 	}

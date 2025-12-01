@@ -21,7 +21,7 @@ func (id HexID) String() string {
 }
 
 /*
-Hostnamectl - handle information from command: "hostnamectl"
+Hostnamectl – handle information from command: "hostnamectl"
 
 	┌──────────────────────┬────────────────────────────────────────────────────────┐
 	│ Field                │ Description                                            │

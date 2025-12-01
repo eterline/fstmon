@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package system
 
 import "fmt"
@@ -36,6 +39,6 @@ var (
 	ErrScrapeSystemInfo     = newSystemError("failed scrape system info")
 	ErrScrapeMemoryMetrics  = newSystemError("failed scrape memory metrics")
 	ErrScrapeThermalMetrics = newSystemError("failed scrape thermal metrics")
-	ErrScrapePartitionsInfo = newSystemError("failed scrape partitions info")
-	ErrScrapePartitionsIO   = newSystemError("failed scrape partitions I/O")
+	ErrScrapePartitions     = newSystemError("failed scrape partitions")
+	ErrScrapeDiskIO         = newSystemError("failed scrape disk I/O")
 )

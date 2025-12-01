@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package api
 
 import (
@@ -19,7 +22,7 @@ type ResponseWrapQuery interface {
 }
 
 /*
-ResponseHttpWrapper - unified HTTP JSON response wrapper.
+ResponseHttpWrapper – unified HTTP JSON response wrapper.
 
 Holds status code, message, array of errors, and optional payload of type T.
 Must only be used on transport level and never referenced by domain logic.
@@ -31,32 +34,32 @@ type ResponseHttpWrapper struct {
 	Data    any      `json:"data,omitempty"`    // Optional payload of type T
 }
 
-// initErrs - ensures Errors slice is initialized with at least startLen capacity.
+// initErrs – ensures Errors slice is initialized with at least startLen capacity.
 func (r *ResponseHttpWrapper) initErrs(startLen int) {
 	if r.Errors == nil {
 		r.Errors = make([]string, 0, startLen)
 	}
 }
 
-// SetCode - sets the HTTP status code and returns the wrapper for chaining.
+// SetCode – sets the HTTP status code and returns the wrapper for chaining.
 func (r *ResponseHttpWrapper) SetCode(code int) ResponseWrapQuery {
 	r.Code = code
 	return r
 }
 
-// SetMessage - sets the message and returns the wrapper for chaining.
+// SetMessage – sets the message and returns the wrapper for chaining.
 func (r *ResponseHttpWrapper) SetMessage(msg string) ResponseWrapQuery {
 	r.Message = msg
 	return r
 }
 
-// WrapData - sets the payload and returns the wrapper for chaining.
+// WrapData – sets the payload and returns the wrapper for chaining.
 func (r *ResponseHttpWrapper) WrapData(data any) ResponseWrapQuery {
 	r.Data = &data
 	return r
 }
 
-// AddError - adds one or more error values to the Errors slice.
+// AddError – adds one or more error values to the Errors slice.
 func (r *ResponseHttpWrapper) AddError(err ...error) ResponseWrapQuery {
 	r.initErrs(len(err))
 	for _, e := range err {
@@ -65,40 +68,40 @@ func (r *ResponseHttpWrapper) AddError(err ...error) ResponseWrapQuery {
 	return r
 }
 
-// AddStringError - adds one or more string errors to the Errors slice.
+// AddStringError – adds one or more string errors to the Errors slice.
 func (r *ResponseHttpWrapper) AddStringError(err ...string) ResponseWrapQuery {
 	r.initErrs(len(err))
 	r.Errors = append(r.Errors, err...)
 	return r
 }
 
-// AddStringError - adds one or more string errors to the Errors slice.
+// AddStringError – adds one or more string errors to the Errors slice.
 func (r *ResponseHttpWrapper) Raw() *ResponseHttpWrapper {
 	return r
 }
 
 // ================= Builders ==================
 
-// NewResponse - creates a new empty response wrapper.
+// NewResponse – creates a new empty response wrapper.
 func NewResponse() *ResponseHttpWrapper {
 	return &ResponseHttpWrapper{}
 }
 
-// OkResponse - creates a 200 response with a message and no payload.
+// OkResponse – creates a 200 response with a message and no payload.
 func OkResponse(message string) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(http.StatusOK).
 		SetMessage(message)
 }
 
-// OkDataResponse - creates a 200 response with payload.
+// OkDataResponse – creates a 200 response with payload.
 func OkDataResponse[T any](data T) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(http.StatusOK).
 		WrapData(data)
 }
 
-// OkMsgResponse - creates a 200 response with both message and payload.
+// OkMsgResponse – creates a 200 response with both message and payload.
 func OkMsgResponse[T any](message string, data T) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(http.StatusOK).
@@ -106,14 +109,14 @@ func OkMsgResponse[T any](message string, data T) ResponseWrapQuery {
 		WrapData(data)
 }
 
-// ErrorSimpleResponse - creates an error response with code and string errors.
+// ErrorSimpleResponse – creates an error response with code and string errors.
 func InternalErrorResponse() ResponseWrapQuery {
 	return NewResponse().
 		SetCode(http.StatusInternalServerError).
 		SetMessage("internal server error")
 }
 
-// ErrorSimpleResponse - creates an error response with code and string errors.
+// ErrorSimpleResponse – creates an error response with code and string errors.
 func ErrorSimpleResponse[T any](code int, errsDetails ...string) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(code).
@@ -121,7 +124,7 @@ func ErrorSimpleResponse[T any](code int, errsDetails ...string) ResponseWrapQue
 		AddStringError(errsDetails...)
 }
 
-// ErrorDetailedResponse - creates an error response with code, message, and Go errors.
+// ErrorDetailedResponse – creates an error response with code, message, and Go errors.
 func ErrorDetailedResponse[T any](code int, message string, errs ...error) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(code).
@@ -129,7 +132,7 @@ func ErrorDetailedResponse[T any](code int, message string, errs ...error) Respo
 		AddError(errs...)
 }
 
-// NewCustomResponse - creates a fully configurable response with string error.
+// NewCustomResponse – creates a fully configurable response with string error.
 func NewCustomResponse[T any](code int, message, errMsg string, data T) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(code).
@@ -138,7 +141,7 @@ func NewCustomResponse[T any](code int, message, errMsg string, data T) Response
 		WrapData(data)
 }
 
-// NewCustomDetailedResponse - creates a fully configurable response with Go error.
+// NewCustomDetailedResponse – creates a fully configurable response with Go error.
 func NewCustomDetailedResponse[T any](code int, message string, err error, data T) ResponseWrapQuery {
 	return NewResponse().
 		SetCode(code).
@@ -147,7 +150,7 @@ func NewCustomDetailedResponse[T any](code int, message string, err error, data 
 		WrapData(data)
 }
 
-// Write - writes the response as JSON into http.ResponseWriter.
+// Write – writes the response as JSON into http.ResponseWriter.
 // Handles status code, headers, JSON encoding and fallback on encoding error.
 func (r *ResponseHttpWrapper) Write(w http.ResponseWriter) error {
 

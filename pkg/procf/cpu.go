@@ -14,7 +14,7 @@ import (
 )
 
 /*
-SizesTLB - handle Translation Lookaside Buffer
+SizesTLB – handle Translation Lookaside Buffer
 
 	┌───────────┬────────────────────────────────────────────────────┐
 	│ Field     │ Description                                        │
@@ -29,7 +29,7 @@ type SizesTLB struct {
 }
 
 /*
-AddrBits - handle memory address bits
+AddrBits – handle memory address bits
 
 	┌──────────┬────────────────────────────────────────────────────────────┐
 	│ Field    │ Description                                                │

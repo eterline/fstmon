@@ -6,6 +6,7 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -16,7 +17,16 @@ import (
 	"github.com/eterline/fstmon/internal/log"
 )
 
-// RequestWrapper - wraps incoming HTTP requests with additional metadata.
+func RequestLoggerWrap(logger *slog.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := log.WrapLoggerToContext(r.Context(), logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// RequestWrapper – wraps incoming HTTP requests with additional metadata.
 // Initializes RequestInfo, extracts client IP, attaches it to the request context,
 // and sets the X-Request-Time header.
 func RequestWrapper(ipExt IpExtractor) func(http.Handler) http.Handler {
@@ -33,7 +43,7 @@ func RequestWrapper(ipExt IpExtractor) func(http.Handler) http.Handler {
 }
 
 // TODO: Make access log stream with another walues
-// RequestLogger - logs basic information about each HTTP request, such as path and method,
+// RequestLogger – logs basic information about each HTTP request, such as path and method,
 // using the logger stored in the provided context.
 func RequestLogger(ctx context.Context) func(next http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
@@ -51,7 +61,7 @@ func RequestLogger(ctx context.Context) func(next http.Handler) http.Handler {
 	}
 }
 
-// NoCacheControl - disables browser caching by setting strict no-cache headers.
+// NoCacheControl – disables browser caching by setting strict no-cache headers.
 func NoCacheControl(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -63,7 +73,7 @@ func NoCacheControl(next http.Handler) http.Handler {
 	})
 }
 
-// SecureControl - applies security-related HTTP headers to harden responses.
+// SecureControl – applies security-related HTTP headers to harden responses.
 // Adds protection against XSS, clickjacking, MIME sniffing, and enforces a strict CSP.
 func SecureControl(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,14 +87,14 @@ func SecureControl(next http.Handler) http.Handler {
 		// Prevents MIME sniffing so that the browser strictly adheres to Content-Type
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 
-		// Content Security Policy - restricts allowed sources
+		// Content Security Policy – restricts allowed sources
 		w.Header().Set("Content-Security-Policy", "default-src 'none';")
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-// SourceSubnetsAllow - allows access only from specific CIDR subnets.
+// SourceSubnetsAllow – allows access only from specific CIDR subnets.
 // Extracts request IP, checks it against the whitelist, and blocks requests from disallowed networks.
 func SourceSubnetsAllow(ctx context.Context, ipExt IpExtractor, cidr []string) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
@@ -127,7 +137,7 @@ func SourceSubnetsAllow(ctx context.Context, ipExt IpExtractor, cidr []string) f
 	}
 }
 
-// AllowedHosts - checks the Host header against a list of allowed hosts and blocks unauthorized origins.
+// AllowedHosts – checks the Host header against a list of allowed hosts and blocks unauthorized origins.
 // Protects against host header attacks.
 func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
@@ -164,7 +174,7 @@ func AllowedHosts(ctx context.Context, hosts []string) func(http.Handler) http.H
 	}
 }
 
-// BearerAuth - validates Authorization header.
+// BearerAuth – validates Authorization header.
 func BearerAuth(ctx context.Context, btest BearerTester) func(http.Handler) http.Handler {
 	log := log.MustLoggerFromContext(ctx)
 

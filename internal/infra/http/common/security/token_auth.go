@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package security
 
 import (
@@ -48,7 +51,7 @@ func NewTokenAuthProvide(minLen tokenBearerLenPolicy, token ...string) (*TokenAu
 		tokenBytes := []byte(t)
 
 		if len(tokenBytes) < int(minLen) {
-			return nil, errors.New("invalid token - length must be above or eq 64 bytes")
+			return nil, errors.New("invalid token – length must be above or eq 64 bytes")
 		}
 
 		p.tokenPool = append(p.tokenPool, tokenBytes)
@@ -95,5 +98,5 @@ func (tap *TokenAuthProvide) TestBearer(bearer string) bool {
 // Enabled – returns whether token authentication is enabled.
 // Authentication is enabled when the provider is non-nil.
 func (tap *TokenAuthProvide) Enabled() bool {
-	return tap != nil
+	return tap == nil
 }

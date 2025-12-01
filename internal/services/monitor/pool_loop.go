@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package monitor
 
 import (
@@ -12,7 +15,7 @@ import (
 )
 
 /*
-UpdateWorker - metric update function.
+UpdateWorker – metric update function.
 
 	Accepts a context.
 	Returns the updated metric value or an error.
@@ -29,14 +32,14 @@ type MetricStore interface {
 	GetState(key string) (domain.MetricState, bool)
 }
 
-// ServicePooler - manages a pool of metric update workers.
+// ServicePooler – manages a pool of metric update workers.
 type ServicePooler struct {
 	metricSt  MetricStore
 	jobPool   map[string]*WorkerConfig
 	workersWg sync.WaitGroup
 }
 
-// NewServicePooler - creates a new worker pool instance.
+// NewServicePooler – creates a new worker pool instance.
 func NewServicePooler(ms MetricStore) *ServicePooler {
 	return &ServicePooler{
 		metricSt: ms,
@@ -44,7 +47,7 @@ func NewServicePooler(ms MetricStore) *ServicePooler {
 	}
 }
 
-// AddMetricPooling - registers a periodic metric update worker.
+// AddMetricPooling – registers a periodic metric update worker.
 func (sp *ServicePooler) AddMetricPooling(w UpdateWorker, key string, wInterval time.Duration) {
 	sp.jobPool[key] = &WorkerConfig{
 		Interval: wInterval,
@@ -53,7 +56,7 @@ func (sp *ServicePooler) AddMetricPooling(w UpdateWorker, key string, wInterval 
 }
 
 /*
-RunPooling - starts all registered metric update workers.
+RunPooling – starts all registered metric update workers.
 
 Each worker runs in its own goroutine.
 Updates are saved to the MetricSaverGeter under their respective keys.
@@ -119,7 +122,7 @@ func (sp *ServicePooler) RunPooling(ctx context.Context) {
 }
 
 /*
-Await - waits for all metric update workers to finish.
+Await – waits for all metric update workers to finish.
 
 	Typically used after RunPooling when graceful shutdown is required.
 */
@@ -128,11 +131,11 @@ func (sp *ServicePooler) Wait() {
 }
 
 /*
-ActualMetric - retrieves the last known state of a metric.
+ActualMetric – retrieves the last known state of a metric.
 
-	value          - metric value (may be nil)
-	scheduleExists - worker for this key was registered
-	stateExists    - repository has at least one saved state
+	value          – metric value (may be nil)
+	scheduleExists – worker for this key was registered
+	stateExists    – repository has at least one saved state
 */
 func (sp *ServicePooler) ActualMetric(key string) (value any, scheduleExists, stateExists bool, retryIn time.Duration) {
 	job, ok := sp.jobPool[key]

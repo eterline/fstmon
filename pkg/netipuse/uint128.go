@@ -62,7 +62,7 @@ func (u vec128) not() vec128 {
 	return vec128{^u.hiBit, ^u.loBit}
 }
 
-// subOne returns u - 1.
+// subOne returns u – 1.
 func (u vec128) subOne() vec128 {
 	lo, borrow := bits.Sub64(u.loBit, 1, 0)
 	return vec128{u.hiBit - borrow, lo}

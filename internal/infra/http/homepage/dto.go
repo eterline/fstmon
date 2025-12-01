@@ -1,20 +1,25 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package httphomepage
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/eterline/fstmon/internal/domain"
 )
 
 // ============================ CPU dto ============================
 
-// DTOCpuCore - simplified per-core dynamic metrics.
+// DTOCpuCore – simplified per-core dynamic metrics.
 type DTOCpuCore struct {
 	Load      string `json:"load"`      // "12.5%"
 	Frequency string `json:"frequency"` // "3200MHz"
 }
 
-// DTOCpu - aggregated CPU info for homepage.
+// DTOCpu – aggregated CPU info for homepage.
 type DTOCpu struct {
 	Vendor      string `json:"vendor"`       // "Intel", "AMD"
 	Model       string `json:"model"`        // "Ryzen 5 5600X"
@@ -189,4 +194,68 @@ func Domain2DTONetworkInterfaceIO(v domain.InterfacesIOMap) *DTONetworkIO {
 	dto.DropsTotal = dropTotal
 
 	return dto
+}
+
+// ============================ Disk systme and FS dto ============================
+
+type DTOPartitionUsage struct {
+	UsedPercent                  string `json:"used_percent"` // Used space percentage
+	TotalBytes                   string `json:"total"`        // Total bytes
+	UsedBytes                    string `json:"used"`         // Used bytes
+	FreeBytes                    string `json:"free"`         // Free bytes
+	UsedBytesTotalBytes          string `json:"used_total"`
+	UsedBytesTotalBytesFreeBytes string `json:"used_total_free"`
+
+	InodesUsedPercent string `json:"inodes_used_percent"` // Inode usage percentage
+	InodesTotal       string `json:"inodes_total"`        // Total inodes
+	InodesUsed        string `json:"inodes_used"`         // Used inodes
+	InodesFree        string `json:"inodes_free"`         // Free inodes
+}
+
+type DTOPartition struct {
+	Device        string             `json:"device"`         // Device path, e.g. "/dev/sda1"
+	Mount         string             `json:"mount"`          // Mount point, e.g. "/"
+	Filesystem    string             `json:"filesystem"`     // Filesystem type, e.g. "ext4"
+	OptionsString string             `json:"options_string"` // Mount options
+	Options       []string           `json:"options"`        // Mount options
+	Usage         *DTOPartitionUsage `json:"usage"`
+}
+
+type DTOPartitions map[string]DTOPartition
+
+func Domain2DTOPartitions(v domain.Partitions) *DTOPartitions {
+	if len(v) == 0 {
+		return &DTOPartitions{}
+	}
+
+	dto := make(DTOPartitions, len(v))
+
+	for _, p := range v {
+		part := DTOPartition{
+			Device:        p.Device,
+			Mount:         p.Mount,
+			Filesystem:    p.Filesystem,
+			OptionsString: strings.Join(p.Options, " "),
+			Options:       p.Options,
+		}
+
+		if p.Usage != nil {
+			part.Usage = &DTOPartitionUsage{
+				UsedPercent:                  fmt.Sprintf("%.1f%%", p.Usage.UsedPercent),
+				TotalBytes:                   NewQBBSBuilder(0).Add(p.Usage.TotalBytes).Build(),
+				UsedBytes:                    NewQBBSBuilder(0).Add(p.Usage.UsedBytes).Build(),
+				FreeBytes:                    NewQBBSBuilder(0).Add(p.Usage.FreeBytes).Build(),
+				UsedBytesTotalBytes:          NewQBBSBuilder('/').Add(p.Usage.UsedBytes).Add(p.Usage.TotalBytes).Build(),
+				UsedBytesTotalBytesFreeBytes: NewQBBSBuilder('/').Add(p.Usage.UsedBytes).Add(p.Usage.TotalBytes).Add(p.Usage.FreeBytes).Build(),
+				InodesUsedPercent:            fmt.Sprintf("%.1f%%", p.Usage.InodesUsedPercent),
+				InodesTotal:                  strconv.FormatUint(p.Usage.InodesTotal, 10),
+				InodesUsed:                   strconv.FormatUint(p.Usage.InodesUsed, 10),
+				InodesFree:                   strconv.FormatUint(p.Usage.InodesFree, 10),
+			}
+		}
+
+		dto[p.Device] = part
+	}
+
+	return &dto
 }

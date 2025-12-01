@@ -1,14 +1,19 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package fastparse
 
-import "errors"
+type Int interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64
+}
 
-func StringParseInt[I int | int8 | int16 | int32 | int64](s string) (I, error) {
+func StringParseInt[I Int](s string) (I, error) {
 	return ParseInt[I]([]byte(s))
 }
 
-func ParseInt[I int | int8 | int16 | int32 | int64](b []byte) (I, error) {
+func ParseInt[I Int](b []byte) (I, error) {
 	if len(b) == 0 {
-		return 0, errors.New("empty input")
+		return 0, ErrEmptyInput
 	}
 
 	sign := int64(1)
@@ -25,7 +30,7 @@ func ParseInt[I int | int8 | int16 | int32 | int64](b []byte) (I, error) {
 	for ; i < len(b); i++ {
 		c := b[i]
 		if c < '0' || c > '9' {
-			return 0, errors.New("invalid int format")
+			return 0, ErrInvalidInt.value(b)
 		}
 		val = val*10 + int64(c-'0')
 	}

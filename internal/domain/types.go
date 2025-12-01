@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package domain
 
 import "time"
@@ -5,7 +8,7 @@ import "time"
 // ==========================
 
 /*
-Numerable - type constraint matching all numeric types in Go.
+Numerable – type constraint matching all numeric types in Go.
 
 	Used for generic IO structures to support arithmetic operations.
 */
@@ -16,7 +19,7 @@ type Numerable interface {
 }
 
 /*
-NewIO - creates a new IO instance with given RX and TX values.
+NewIO – creates a new IO instance with given RX and TX values.
 
 	Initializes Summary as RX + TX.
 */
@@ -29,7 +32,7 @@ func NewIO[T Numerable](rx, tx T) IO[T] {
 }
 
 /*
-IO - generic structure representing input/output metrics.
+IO – generic structure representing input/output metrics.
 
 	Holds RX (received), TX (transmitted) and a Summary field (RX+TX).
 */
@@ -41,13 +44,13 @@ type IO[T Numerable | time.Duration] struct {
 
 // ====
 
-// IncRX - increments the RX field by given value and updates Summary.
+// IncRX – increments the RX field by given value and updates Summary.
 func (io *IO[T]) IncRX(v T) {
 	io.RX += v
 	io.Summary += v
 }
 
-// IncTX - increments the TX field by given value and updates Summary.
+// IncTX – increments the TX field by given value and updates Summary.
 func (io *IO[T]) IncTX(v T) {
 	io.TX += v
 	io.Summary += v
@@ -55,13 +58,13 @@ func (io *IO[T]) IncTX(v T) {
 
 // ====
 
-// DecRX - decrements the RX field by given value and updates Summary.
+// DecRX – decrements the RX field by given value and updates Summary.
 func (io *IO[T]) DecRX(v T) {
 	io.RX -= v
 	io.Summary -= v
 }
 
-// DecTX - decrements the TX field by given value and updates Summary.
+// DecTX – decrements the TX field by given value and updates Summary.
 func (io *IO[T]) DecTX(v T) {
 	io.TX -= v
 	io.Summary -= v

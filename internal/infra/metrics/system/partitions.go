@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package system
 
 import (
@@ -20,52 +23,30 @@ func NewHardwareMetricPartitions(fs procfs.FS) *hardwareMetricPartitions {
 	}
 }
 
-func (hmp *hardwareMetricPartitions) ScrapePartitionsInfo(ctx context.Context) (domain.PartitionsInfo, error) {
-	prts, err := diskPs.PartitionsWithContext(ctx, true)
-	if err != nil {
-		return domain.PartitionsInfo{},
-			ErrScrapePartitionsInfo.Wrap(err)
-	}
-
-	data := make(domain.PartitionsInfo, len(prts))
-
-	for i, v := range prts {
-		data[i] = domain.PartitionInfo{
-			Device:     v.Device,
-			Mount:      v.Mountpoint,
-			Filesystem: v.Fstype,
-			Options:    v.Opts,
-		}
-	}
-
-	return data, nil
-}
-
-func (hmp *hardwareMetricPartitions) ScrapePartitionIO(ctx context.Context) (domain.PartitionIOMap, error) {
+func (hmp *hardwareMetricPartitions) ScrapeDiskIO(ctx context.Context) (domain.DiskIOMap, error) {
 	ct0, err := diskPs.IOCountersWithContext(ctx)
 	if err != nil {
-		return nil, ErrScrapePartitionsIO.Wrap(err)
+		return nil, ErrScrapeDiskIO.Wrap(err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return domain.PartitionIOMap{},
-			ErrScrapePartitionsIO.Wrap(ctx.Err())
+		return domain.DiskIOMap{}, ErrScrapeDiskIO.Wrap(ctx.Err())
 	case <-time.After(1 * time.Second):
 	}
 
 	ct1, err := diskPs.IOCountersWithContext(ctx)
 	if err != nil {
-		return nil, ErrScrapePartitionsIO.Wrap(err)
+		return nil, ErrScrapeDiskIO.Wrap(err)
 	}
 
-	data := make(domain.PartitionIOMap, len(ct0))
+	data := make(domain.DiskIOMap, len(ct0))
 
 	for iface, io := range ct1 {
 		rxTime := usecase.MsToDuration(io.ReadTime)
 		txTime := usecase.MsToDuration(io.WriteTime)
 
-		data[iface] = domain.PartitionIO{
+		data[iface] = domain.DiskIO{
 			IopsInProgress: io.IopsInProgress,
 
 			Ops:       domain.NewIO(io.ReadCount, io.WriteCount),
@@ -99,6 +80,42 @@ func (hmp *hardwareMetricPartitions) ScrapePartitionIO(ctx context.Context) (dom
 		c.BytesPerSec.DecTX(io.WriteBytes)
 
 		data[iface] = c
+	}
+
+	return data, nil
+}
+
+func (hmp *hardwareMetricPartitions) ScrapePartitions(ctx context.Context) (domain.Partitions, error) {
+	prts, err := diskPs.PartitionsWithContext(ctx, true)
+	if err != nil {
+		return domain.Partitions{}, ErrScrapePartitions.Wrap(err)
+	}
+
+	data := make(domain.Partitions, len(prts))
+
+	for i, v := range prts {
+		part := domain.Partition{
+			Device:     v.Device,
+			Mount:      v.Mountpoint,
+			Filesystem: v.Fstype,
+			Options:    v.Opts,
+			Usage:      nil,
+		}
+
+		if usage, err := diskPs.Usage(v.Mountpoint); err == nil {
+			part.Usage = &domain.PartitionUsage{
+				TotalBytes:        usage.Total,
+				FreeBytes:         usage.Free,
+				UsedBytes:         usage.Used,
+				UsedPercent:       usage.UsedPercent,
+				InodesTotal:       usage.InodesTotal,
+				InodesFree:        usage.InodesFree,
+				InodesUsed:        usage.InodesUsed,
+				InodesUsedPercent: usage.InodesUsedPercent,
+			}
+		}
+
+		data[i] = part
 	}
 
 	return data, nil

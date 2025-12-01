@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package metricstore
 
 import (
@@ -9,7 +12,7 @@ import (
 )
 
 /*
-MetricInMemoryStore - in-memory storage, implements MetricRepository.
+MetricInMemoryStore – in-memory storage, implements MetricRepository.
 
 	Stores a per-key preallocated pointer to a concrete value and reuses it on updates
 	to avoid repeated allocations.
@@ -40,7 +43,7 @@ func (me *metricEntry) setLastUpdateTime(t time.Time) {
 	me.lastUpdate = t.UnixMilli()
 }
 
-// NewMetricInMemoryStore - create new in-memory storage.
+// NewMetricInMemoryStore – create new in-memory storage.
 func NewMetricInMemoryStore() *MetricInMemoryStore {
 	return &MetricInMemoryStore{
 		db: make(map[string]*metricEntry),
@@ -52,7 +55,7 @@ func NewMetricInMemoryStore() *MetricInMemoryStore {
 // =========================
 
 /*
-SaveValue - saves value for the given key and timestamp.
+SaveValue – saves value for the given key and timestamp.
 
 	Behavior:
 	- If this is the first time a value for this key is seen, allocate a pointer of the concrete type
@@ -150,7 +153,7 @@ func (r *MetricInMemoryStore) SaveValue(key string, value any, ts time.Time) {
 }
 
 /*
-GetState - returns domain.MetricState and whether key exists.
+GetState – returns domain.MetricState and whether key exists.
 
 	We return a copy of the stored value (dereferenced) so caller receives normal
 	value (not pointer to internal buffer).
@@ -185,7 +188,7 @@ func (r *MetricInMemoryStore) GetState(key string) (domain.MetricState, bool) {
 }
 
 /*
-Close - clears all entries and releases internal storage.
+Close – clears all entries and releases internal storage.
 
 	Behavior:
 	- For each entry we zero the underlying storage (if pointer), mark unavailable and delete map entries.

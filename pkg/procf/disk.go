@@ -17,7 +17,7 @@ import (
 )
 
 /*
-PartitionUsage - Represents disk partition usage statistics, including space and inode allocation metrics
+PartitionUsage – Represents disk partition usage statistics, including space and inode allocation metrics
 
 	┌──────────────────────┬─────────────────────────────────────────────────────────┐
 	│ Field                │ Description                                             │
@@ -44,7 +44,7 @@ type PartitionUsage struct {
 }
 
 /*
-Partition - Represents a filesystem partition's metadata and usage statistics
+Partition – Represents a filesystem partition's metadata and usage statistics
 
 	┌──────────────┬─────────────────────────────────────────────────────────────────┐
 	│ Field        │ Description                                                     │
@@ -70,7 +70,7 @@ func (p Partition) Name() string {
 }
 
 /*
-Partitions - types of partitions in system
+Partitions – types of partitions in system
 
 	┌──────────────┬───────────────────────────────────────────────────────────────┐
 	│ Field        │ Description                                                   │
@@ -91,7 +91,7 @@ type Partitions struct {
 }
 
 /*
-SmartAttribute - Represents a single SMART (Self-Monitoring, Analysis and Reporting Technology)
+SmartAttribute – Represents a single SMART (Self-Monitoring, Analysis and Reporting Technology)
 attribute from a storage device (HDD/SSD), as reported by smartctl
 
 	┌───────────────┬───────────────────────────────────────────────────────────────────┐
@@ -261,7 +261,7 @@ func devPrefixPartitions(p string) []Partition {
 }
 
 /*
-/proc/diskstats - Displays I/O statistics for block devices.
+/proc/diskstats – Displays I/O statistics for block devices.
 
 Each line contains the following fields:
 

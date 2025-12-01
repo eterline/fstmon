@@ -1,14 +1,23 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package fastparse
 
-import "errors"
+type Float interface {
+	~float32 | ~float64
+}
 
-func StringParseFloat[F float32 | float64](s string) (F, error) {
+func StringParseFloat[F Float](s string) (F, error) {
 	return ParseFloat[F]([]byte(s))
 }
 
-func ParseFloat[F float32 | float64](b []byte) (F, error) {
+func ParseFloat[F Float](b []byte) (F, error) {
 	if len(b) == 0 {
-		return 0, errors.New("empty input")
+		return 0, ErrEmptyInput
+	}
+
+	if len(b) == 1 && b[0] == '0' {
+		return 0, nil
 	}
 
 	var sign float64 = 1
@@ -37,17 +46,21 @@ func ParseFloat[F float32 | float64](b []byte) (F, error) {
 			break
 		}
 
-		return 0, errors.New("invalid float format")
+		return 0, ErrInvalidFloat.value(b)
 	}
 
 	for ; i < len(b); i++ {
 		c := b[i]
 		if c < '0' || c > '9' {
-			return 0, errors.New("invalid float format")
+			return 0, ErrInvalidFloat.value(b)
 		}
 		fracPart = fracPart*10 + float64(c-'0')
 		fracDiv *= 10
 	}
 
-	return F(sign * (intPart + fracPart/fracDiv)), nil
+	if r := F(sign * (intPart + fracPart/fracDiv)); r != 0 {
+		return r, nil
+	}
+
+	return 0, ErrInvalidFloat.value(b)
 }

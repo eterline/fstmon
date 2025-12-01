@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package usecase
 
 import "time"
@@ -26,7 +29,7 @@ func MapSlices[K comparable, V any](m map[K]V) (keys []K, values []V) {
 }
 
 /*
-Numerable - type constraint matching all numeric types in Go.
+Numerable – type constraint matching all numeric types in Go.
 
 	Used for generic IO structures to support arithmetic operations.
 */

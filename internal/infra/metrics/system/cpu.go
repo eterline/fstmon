@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package system
 
 import (
@@ -12,7 +15,7 @@ import (
 )
 
 /*
-hardwareMetricCPU - provides CPU hardware metrics, both static and dynamic.
+hardwareMetricCPU – provides CPU hardware metrics, both static and dynamic.
 
 	It can fetch information about CPU package and per-core metrics.
 	Interval defines the averaging duration for dynamic metrics.
@@ -22,7 +25,7 @@ type hardwareMetricCPU struct {
 }
 
 /*
-NewHardwareMetricCPU - creates a new hardwareMetricCPU instance.
+NewHardwareMetricCPU – creates a new hardwareMetricCPU instance.
 
 	Interval specifies the time duration for CPU load averaging in CpuMetrics.
 */
@@ -33,19 +36,19 @@ func NewHardwareMetricCPU(measureInterwal time.Duration) *hardwareMetricCPU {
 }
 
 /*
-CpuPackage - returns static CPU package information, including:
+CpuPackage – returns static CPU package information, including:
 
-  - vendor
+	– vendor
 
-  - model name
+	- model name
 
-  - microcode version
+	- microcode version
 
-  - CPU flags
+	- CPU flags
 
-  - per-core static details (CoreID, PhysicalID, Cache)
+	- per-core static details (CoreID, PhysicalID, Cache)
 
-    Returns an error if fetching CPU info fails or no cores are detected.
+	  Returns an error if fetching CPU info fails or no cores are detected.
 */
 func (hmc *hardwareMetricCPU) ScrapeCpuPackage(ctx context.Context) (domain.CpuPackage, error) {
 	info, err := procf.FetchCpuInfo()
@@ -86,17 +89,17 @@ func (hmc *hardwareMetricCPU) ScrapeCpuPackage(ctx context.Context) (domain.CpuP
 }
 
 /*
-CpuMetrics - returns dynamic CPU metrics, including:
+CpuMetrics – returns dynamic CPU metrics, including:
 
-  - per-core load
+	– per-core load
 
-  - per-core frequency
+	- per-core frequency
 
-  - average load/frequency across all cores
+	- average load/frequency across all cores
 
-    Uses the configured interval for calculating CPU load percentages.
-    Returns an error if fetching CPU info or CPU load fails,
-    or if the number of cores and load entries do not match.
+	  Uses the configured interval for calculating CPU load percentages.
+	  Returns an error if fetching CPU info or CPU load fails,
+	  or if the number of cores and load entries do not match.
 */
 func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.CpuMetrics, error) {
 	cpuInfo, err := pscpu.InfoWithContext(ctx)

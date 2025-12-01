@@ -12,7 +12,7 @@ import (
 )
 
 /*
-SubnetFilter - represents a filter for allowed subnets.
+SubnetFilter – represents a filter for allowed subnets.
 
 	Holds a pool of allowed IP prefixes. Provides methods to check
 	if a given IP is allowed and to retrieve the list of allowed prefixes.
@@ -22,7 +22,7 @@ type SubnetFilter struct {
 }
 
 /*
-NewSubnetFilter - creates a new SubnetFilter from a list of CIDR strings.
+NewSubnetFilter – creates a new SubnetFilter from a list of CIDR strings.
 
 	Attempts to parse each CIDR and builds a pool of allowed subnets.
 	Returns the filter and an aggregated error if any of the subnets failed to parse.
@@ -59,7 +59,7 @@ func NewSubnetFilter(cidr []string) (*SubnetFilter, error) {
 }
 
 /*
-InAllowedSubnets - checks whether the given IP address is within the allowed subnets.
+InAllowedSubnets – checks whether the given IP address is within the allowed subnets.
 
 	Returns true if:
 	- The pool is nil (no restriction),
@@ -74,7 +74,7 @@ func (f *SubnetFilter) InAllowedSubnets(ip netip.Addr) bool {
 }
 
 /*
-AllowedList - returns the list of allowed prefixes as netip.Prefix slices.
+AllowedList – returns the list of allowed prefixes as netip.Prefix slices.
 
 	Returns nil if no pool is defined.
 */

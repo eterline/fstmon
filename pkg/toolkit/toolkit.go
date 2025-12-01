@@ -25,36 +25,36 @@ type AppStarter struct {
 	wg       sync.WaitGroup
 }
 
-// StopApp - cancel root app context and stopping app
+// StopApp – cancel root app context and stopping app
 func (s *AppStarter) StopApp() {
 	if s.Context.Err() == nil {
 		s.stopFunc()
 	}
 }
 
-// MustStopApp - cancel root app context and extremely stops app with exit code
+// MustStopApp – cancel root app context and extremely stops app with exit code
 func (s *AppStarter) MustStopApp(exitCode int) {
 	s.StopApp()
 	<-s.Context.Done()
 	os.Exit(exitCode)
 }
 
-// Wait - waiting for app root context done
+// Wait – waiting for app root context done
 func (s *AppStarter) Wait() {
 	<-s.Context.Done()
 }
 
-// AddWorker - appends worker
+// AddWorker – appends worker
 func (s *AppStarter) AddWorker() {
 	s.wg.Add(1)
 }
 
-// DoneWorker - final worker
+// DoneWorker – final worker
 func (s *AppStarter) DoneWorker() {
 	s.wg.Done()
 }
 
-// WrapWorker - wrap worker into root workers
+// WrapWorker – wrap worker into root workers
 func (s *AppStarter) WrapWorker(f func()) {
 	s.AddWorker()
 	go func() {
@@ -63,7 +63,7 @@ func (s *AppStarter) WrapWorker(f func()) {
 	}()
 }
 
-// WaitWorkers - wait for workers final or timeout exit
+// WaitWorkers – wait for workers final or timeout exit
 func (s *AppStarter) WaitWorkers(timeout time.Duration) error {
 
 	s.Wait()
@@ -87,17 +87,17 @@ func (s *AppStarter) WaitWorkers(timeout time.Duration) error {
 
 // ============================
 
-// FinalThreads - wait for thread final or timeout exit
+// FinalThreads – wait for thread final or timeout exit
 func (s *AppStarter) WorkTime() time.Duration {
 	return s.wTimer()
 }
 
-// AddValue - appends to context values with key
+// AddValue – appends to context values with key
 func (s *AppStarter) AddValue(key, value any) {
 	s.Context = context.WithValue(s.Context, key, value)
 }
 
-// UseContextAdders - uses func list that returns new context
+// UseContextAdders – uses func list that returns new context
 func (s *AppStarter) UseContextAdders(
 	addFunc ...func(context.Context) context.Context,
 ) {
@@ -106,7 +106,7 @@ func (s *AppStarter) UseContextAdders(
 	}
 }
 
-// InitAppStart - create app root context and stop function object
+// InitAppStart – create app root context and stop function object
 func InitAppStart(preInitFunc func() error) *AppStarter {
 	return InitAppStartWithContext(
 		context.Background(),
@@ -114,8 +114,8 @@ func InitAppStart(preInitFunc func() error) *AppStarter {
 	)
 }
 
-// InitAppStartWithContext - create app root context and stop function object form external context.
-// Must be used with pre init function. If their init will be errored - panic closes app
+// InitAppStartWithContext – create app root context and stop function object form external context.
+// Must be used with pre init function. If their init will be errored – panic closes app
 func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *AppStarter {
 
 	if err := preInitFunc(); err != nil {
@@ -140,7 +140,7 @@ func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *App
 
 // =================================
 
-// BytesUUID - generates uuid (v5) from bytes array
+// BytesUUID – generates uuid (v5) from bytes array
 func BytesUUID(input []byte) (uuid.UUID, bool) {
 	hash := sha1.New()
 
@@ -157,12 +157,12 @@ func BytesUUID(input []byte) (uuid.UUID, bool) {
 	return id, true
 }
 
-// StringUUID - generates uuid (v5) from string value
+// StringUUID – generates uuid (v5) from string value
 func StringUUID(input string) (uuid.UUID, bool) {
 	return BytesUUID([]byte(input))
 }
 
-// BytesUUID - generates uuid (v5) from object
+// BytesUUID – generates uuid (v5) from object
 func ObjectUUID(object any) (uuid.UUID, bool) {
 	data, err := json.Marshal(object)
 	if err != nil {

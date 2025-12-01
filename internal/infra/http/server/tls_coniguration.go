@@ -1,9 +1,12 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package server
 
 import "crypto/tls"
 
 var (
-	// tlsCiphers - preferred TLS cipher suites.
+	// tlsCiphers – preferred TLS cipher suites.
 	tlsCiphers = []uint16{
 		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
 		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
@@ -11,7 +14,7 @@ var (
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 	}
 
-	// tlsCurves - preferred elliptic curves.
+	// tlsCurves – preferred elliptic curves.
 	tlsCurves = []tls.CurveID{
 		tls.CurveP521,
 		tls.CurveP384,
@@ -23,7 +26,7 @@ var (
 )
 
 /*
-NewServerTlsConfig - creates or returns singleton TLS config for servers.
+NewServerTlsConfig – creates or returns singleton TLS config for servers.
 PreferServerCipherSuites is always true. Min TLS 1.2, Max TLS 1.3.
 */
 func NewServerTlsConfig() *tls.Config {

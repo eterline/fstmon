@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package system
 
 type numerable interface {
@@ -6,7 +9,7 @@ type numerable interface {
 		~int | ~int32 | ~int64
 }
 
-// uwPtr - unwrap T numerable pointer without panic
+// uwPtr – unwrap T numerable pointer without panic
 func uwPtr[T numerable](ptr *T) T {
 	if ptr == nil {
 		return T(0)

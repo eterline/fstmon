@@ -1,3 +1,6 @@
+// Copyright (c) 2025 EterLine (Andrew)
+// This file is part of fstmon.
+// Licensed under the MIT License. See the LICENSE file for details.
 package system
 
 import (
@@ -9,7 +12,7 @@ import (
 )
 
 /*
-hardwareMetricNetwork  - provides network interface metrics for the host.
+hardwareMetricNetwork  – provides network interface metrics for the host.
 
 	It allows fetching per-interface counters, including bytes sent/received,
 	packet counts, and error counts. Supports measuring speed over a short interval.
@@ -19,7 +22,7 @@ type hardwareMetricNetwork struct {
 }
 
 /*
-NewHardwareMetricNetwork  - creates a new hardwareMetricNetwork instance.
+NewHardwareMetricNetwork  – creates a new hardwareMetricNetwork instance.
 */
 func NewHardwareMetricNetwork(fs procfs.FS) *hardwareMetricNetwork {
 	return &hardwareMetricNetwork{
@@ -28,7 +31,7 @@ func NewHardwareMetricNetwork(fs procfs.FS) *hardwareMetricNetwork {
 }
 
 /*
-ScrapeInterfacesIO - collects network metrics for all interfaces.
+ScrapeInterfacesIO – collects network metrics for all interfaces.
 
 	It performs two snapshots of per-interface I/O counters with a 1-second interval
 	to calculate approximate network speed.

@@ -146,7 +146,7 @@ type CoreInfo struct {
 	PowerManagement []string     `json:"power_management"`
 }
 
-// InterfaceCounters - map of interface counters stats (RX and TX)
+// InterfaceCounters – map of interface counters stats (RX and TX)
 type InterfaceCounters map[string]InterfaceCounter
 
 /*
@@ -204,7 +204,7 @@ type NetTX struct {
 }
 
 /*
-IpSnmp - IP layer statistics, including packet forwarding, errors, fragmentation, and reassembly
+IpSnmp – IP layer statistics, including packet forwarding, errors, fragmentation, and reassembly
 
 	┌───────────────────┬─────────────────────────────────────────────────────────────┐
 	│ Field             │ Description                                                 │
@@ -255,7 +255,7 @@ type IpSnmp struct {
 }
 
 /*
-IcmpSnmp - TCP protocol statistics, including connection states, retransmissions, and errors
+IcmpSnmp – TCP protocol statistics, including connection states, retransmissions, and errors
 
 	┌──────────────────────┬───────────────────────────────────────────────────┐
 	│ Field                │ Description                                       │
@@ -324,7 +324,7 @@ type IcmpSnmp struct {
 }
 
 /*
-TcpSnmp - TCP protocol statistics, including connection states, retransmissions, and errors
+TcpSnmp – TCP protocol statistics, including connection states, retransmissions, and errors
 
 	┌──────────────────┬───────────────────────────────────────────────────┐
 	│ Field            │ Description                                       │
@@ -365,7 +365,7 @@ type TcpSnmp struct {
 }
 
 /*
-UdpSnmp - UDP and UDP-Lite statistics, covering datagrams, errors, and buffer issues
+UdpSnmp – UDP and UDP-Lite statistics, covering datagrams, errors, and buffer issues
 
 	┌──────────────────┬────────────────────────────────────────┐
 	│ Field            │ Description                            │
@@ -394,7 +394,7 @@ type UdpSnmp struct {
 }
 
 /*
-SnmpCounter - Aggregates all SNMP counters for IP, ICMP, TCP, UDP, and UDP-Lite
+SnmpCounter – Aggregates all SNMP counters for IP, ICMP, TCP, UDP, and UDP-Lite
 
 	┌──────────┬─────────────────────────────────────────────┐
 	│ Field    │ Description                                 │
@@ -415,7 +415,7 @@ type SnmpCounter struct {
 }
 
 /*
-NetCounter - Aggregates network statistics, including per-interface counter and protocol-level SNMP metrics
+NetCounter – Aggregates network statistics, including per-interface counter and protocol-level SNMP metrics
 
 	┌───────────┬─────────────────────────────────────────────────────────────┐
 	│ Field     │ Description                                                 │
@@ -431,7 +431,7 @@ type NetCounter struct {
 }
 
 /*
-InterfaceCounter - Tracks per-interface network statistics, split into receive (RX) and transmit (TX) metrics
+InterfaceCounter – Tracks per-interface network statistics, split into receive (RX) and transmit (TX) metrics
 
 	┌──────────┬────────────────────────────────┐
 	│ Field    │ Description                    │

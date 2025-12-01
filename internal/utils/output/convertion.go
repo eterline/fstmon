@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// SpeedString - formatted output of bytes: 32KB
+// SpeedString – formatted output of bytes: 32KB
 func SizeString(v uint64) string {
 	const (
 		_          = iota
@@ -81,12 +81,12 @@ func AverageFloat[F Float](l []F) F {
 	return sum / F(len)
 }
 
-// SpeedString - formatted output of bytes speed: 32KB/s
+// SpeedString – formatted output of bytes speed: 32KB/s
 func SpeedString(v uint64) string {
 	return SizeString(v) + "/s"
 }
 
-// FmtTime - formatted output of duration: 1h22m33s
+// FmtTime – formatted output of duration: 1h22m33s
 func FmtTime(t time.Duration) string {
 	seconds := int(t.Seconds())
 
