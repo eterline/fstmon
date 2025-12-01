@@ -5,3 +5,4 @@
 /certs/*
 !/certs/.keep
 /set_lic.sh
+/.tests
