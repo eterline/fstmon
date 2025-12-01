@@ -12,50 +12,40 @@ Monitoing microservice for [homepage](https://gethomepage.dev) or another. Writt
 
 To build project in full prod variant
 ```sh
-task build-prod
+task build
 ```
 
-for testing build
+For testing build
 ```sh
-task build
+task build-dev
+# or for run
+task run
 ```
 
 ## Arguments
 
-### Logging
+## Command-line Options
 
-| Option                  | Description                                     | Default |
-| ----------------------- | ----------------------------------------------- | ------- |
-| `--log-level LOG-LEVEL` | Logging level: `debug` `info`, `warn`, `error`  | `info`  |
-| `--log-json`, `-j`      | Set logs to JSON format                         | `false` |
-
-### Server
-
-| Option                               | Description                          | Default     |
-| ------------------------------------ | ------------------------------------ | ----------- |
-| `--listen LISTEN`, `-l LISTEN`       | Server listen address                | `:3000`     |
-| `--certfile CERTFILE`, `-c CERTFILE` | Server SSL certificate file          | —           |
-| `--keyfile KEYFILE`, `-k KEYFILE`    | Server SSL key file                  | —           |
-| `--sni SNI`                          | Server allowed request hosts         | `[]`        |
-| `--subnets SUBNETS`, `-s SUBNETS`    | Server allowed source subnets/IPs    | `[]`        |
-| `--token TOKEN`, `-t TOKEN`          | Server auth token string             | env `TOKEN` |
-| `--ip-header`                        | Enable parsing reverse proxy headers | `false`     |
-
-### Metric loops
-
-| Option                              | Description                      | Default |
-| ----------------------------------- | -------------------------------- | ------- |
-| `--cpu-loop CPU-LOOP`               | CPU metric update loop (seconds) | `5`     |
-| `--avgload-loop AVGLOAD-LOOP`       | Avgload update loop (seconds)    | `10`    |
-| `--system-loop SYSTEM-LOOP`         | System update loop (seconds)     | `30`    |
-| `--network-loop NETWORK-LOOP`       | Network update loop (seconds)    | `5`     |
-| `--partitions-loop PARTITIONS-LOOP` | Partitions update loop (seconds) | `30`    |
-
-### Help
-
-| Option         | Description                |
-| -------------- | -------------------------- |
-| `--help`, `-h` | Display this help and exit |
+| Option                               | Alias | Description                                             | Default     |
+|--------------------------------------|-------|---------------------------------------------------------|-------------|
+| `--log-level LOG-LEVEL`              |       | Logging level: `debug` \| `info` \| `warn` \| `error`   | `info`      |
+| `--log-json`                         | `-j`  | Output logs in JSON format                              | `false`     |
+| `--access-log ACCESS-LOG`            |       | Path to access log file (empty → stdout)                | *(empty)*   |
+| `--access-log-enable`                |       | Enable access logging                                   | `false`     |
+| `--listen LISTEN`                    | `-l`  | Server listen address                                   | `:3000`     |
+| `--certfile CERTFILE`                | `-c`  | TLS certificate file                                    | *(none)*    |
+| `--keyfile KEYFILE`                  | `-k`  | TLS private key file                                    | *(none)*    |
+| `--sni SNI`                          | `-h`  | Allowed request hosts (SNI)                             | `[]`        |
+| `--subnets SUBNETS`                  | `-s`  | Allowed source subnets/IP addresses                     | `[]`        |
+| `--token TOKEN`                      | `-t`  | Authentication token (env: `TOKEN`)                     | `[]`        |
+| `--ip-header`                        |       | Enable parsing of reverse proxy IP headers              | `false`     |
+| `--cpu-loop CPU-LOOP`                |       | CPU metrics update interval (seconds)                   | `10`        |
+| `--memory-loop MEMORY-LOOP`          |       | Memory metrics update interval (seconds)                | `10`        |
+| `--system-loop SYSTEM-LOOP`          |       | System metrics update interval (seconds)                | `20`        |
+| `--thermal-loop THERMAL-LOOP`        |       | Thermal metrics update interval (seconds)               | `20`        |
+| `--network-loop NETWORK-LOOP`        |       | Network I/O metrics update interval (seconds)           | `10`        |
+| `--partitions-loop PARTITIONS-LOOP`  |       | Disk I/O metrics update interval (seconds)              | `10`        |
+| `--help`                             | `-h`  | Display help and exit                                   | —           |
 
 
 ## Running
