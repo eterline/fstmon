@@ -159,7 +159,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	// ============================
 
 	root.WrapWorker(func() {
-		err := srv.Run(ctx, ":3000", cfg.KeyFileSSL, cfg.CrtFileSSL)
+		err := srv.Run(ctx, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
 		if err != nil {
 			log.Error("server run error", "error", err)
 		}
