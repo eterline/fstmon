@@ -121,6 +121,7 @@ func TestExtractIP_Headers(t *testing.T) {
 		{"remote", map[string]string{}, "4.4.4.4", true},
 	}
 
+	// TODO: fix errors parsing
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := &http.Request{Header: http.Header{}}
