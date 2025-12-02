@@ -254,7 +254,7 @@ func Domain2DTOPartitions(v domain.Partitions) *DTOPartitions {
 			}
 		}
 
-		dto[p.Device] = part
+		dto[strings.ReplaceAll(p.Device, "/", "&")] = part
 	}
 
 	return &dto
