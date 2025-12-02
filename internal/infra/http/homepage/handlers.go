@@ -189,7 +189,9 @@ func (hhg *HomepageHandlerGroup) HandleDiskIO(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err := api.NewResponse().WrapData(disks).Write(w)
+	dto := Domain2DTODiskIOs(disks)
+
+	err := api.NewResponse().WrapData(dto).Write(w)
 	if err != nil {
 		log.Error("response error", "error", err)
 	}

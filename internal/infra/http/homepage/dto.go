@@ -259,3 +259,99 @@ func Domain2DTOPartitions(v domain.Partitions) *DTOPartitions {
 
 	return &dto
 }
+
+// DTODiskIO – DTO representation of DiskIO for output formatting layers.
+// Contains string-formatted values and raw numeric fields.
+type DTODiskIO struct {
+	IopsInProgress uint64 `json:"iops_in_progress"`
+
+	Ops       IO[uint64] `json:"ops"`
+	MergedOps IO[uint64] `json:"merged_ops"`
+	Bytes     IO[uint64] `json:"bytes"`
+
+	OpsPerSec       IO[uint64] `json:"ops_per_sec"`
+	MergedOpsPerSec IO[uint64] `json:"merged_ops_per_sec"`
+	BytesPerSec     IO[uint64] `json:"bytes_per_sec"`
+
+	Time IO[uint64] `json:"time"` // RX/TX in nanoseconds, string versions formatted in seconds
+
+	IoTime     string `json:"io_time"`     // Total I/O time formatted
+	WeightedIO string `json:"weighted_io"` // Weighted I/O time formatted
+}
+
+type DTODiskIOs map[string]DTODiskIO
+
+/*
+Domain2 - converts domain-level DiskIO to human-readable DTO (DTODiskIO).
+
+Performs:
+- Direct copy of raw counters.
+- Automatic unit selection for bytes and metrics (K/M/G scaling).
+- Optional “/s” postfix for per-second metrics.
+- Conversion of time.Duration fields into readable "X.XXs" string form.
+- Converts Duration into raw nanoseconds for DTO raw fields.
+*/
+func Domain2DTODiskIOs(d domain.DiskIOMap) *DTODiskIOs {
+	s := make(DTODiskIOs, len(d))
+
+	for dev, d := range d {
+		dto := DTODiskIO{}
+
+		// IopsInProgress - direct transfer of the in-flight operations counter
+		dto.IopsInProgress = d.IopsInProgress
+
+		// Ops - auto metric units (K/M/G)
+		dto.Ops = NewIOBuilder(d.Ops.RX, d.Ops.TX).
+			AutoMetricUnits().
+			Build()
+
+		// MergedOps - same as Ops
+		dto.MergedOps = NewIOBuilder(d.MergedOps.RX, d.MergedOps.TX).
+			AutoMetricUnits().
+			Build()
+
+		// Bytes - auto byte units (KiB / MiB / GiB)
+		dto.Bytes = NewIOBuilder(d.Bytes.RX, d.Bytes.TX).
+			AutoUnits().
+			Build()
+
+		// OpsPerSec - metric units + "/s"
+		dto.OpsPerSec = NewIOBuilder(d.OpsPerSec.RX, d.OpsPerSec.TX).
+			AutoMetricUnits().
+			WithPostfix("/s").
+			Build()
+
+		// MergedOpsPerSec - same logic
+		dto.MergedOpsPerSec = NewIOBuilder(d.MergedOpsPerSec.RX, d.MergedOpsPerSec.TX).
+			AutoMetricUnits().
+			WithPostfix("/s").
+			Build()
+
+		// BytesPerSec - auto byte units + "/s"
+		dto.BytesPerSec = NewIOBuilder(d.BytesPerSec.RX, d.BytesPerSec.TX).
+			AutoUnitsPerSec().
+			Build()
+
+		// Time - convert Duration → raw nanoseconds + "X.XXs" formatted text
+		{
+			rawRX := uint64(d.Time.RX) // nanoseconds
+			rawTX := uint64(d.Time.TX)
+
+			dto.Time.RawRX = rawRX
+			dto.Time.RawTX = rawTX
+
+			dto.Time.RX = fmt.Sprintf("%.2fs", d.Time.RX.Seconds())
+			dto.Time.TX = fmt.Sprintf("%.2fs", d.Time.TX.Seconds())
+		}
+
+		// IoTime - formatted total I/O time ("X.XXs")
+		dto.IoTime = fmt.Sprintf("%.2fs", d.IoTime.Seconds())
+
+		// WeightedIO - formatted weighted time
+		dto.WeightedIO = fmt.Sprintf("%.2fs", d.WeightedIO.Seconds())
+
+		s[dev] = dto
+	}
+
+	return &s
+}

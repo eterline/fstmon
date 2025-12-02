@@ -102,7 +102,8 @@ func (hmp *hardwareMetricPartitions) ScrapePartitions(ctx context.Context) (doma
 			Usage:      nil,
 		}
 
-		if usage, err := diskPs.Usage(v.Mountpoint); err == nil {
+		usage, err := diskPs.UsageWithContext(ctx, v.Mountpoint)
+		if err == nil {
 			part.Usage = &domain.PartitionUsage{
 				TotalBytes:        usage.Total,
 				FreeBytes:         usage.Free,

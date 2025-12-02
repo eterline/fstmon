@@ -64,8 +64,6 @@ Homepage config:
                format: text
 ```
 
-Another usage will be describe later
-
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
