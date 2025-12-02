@@ -57,9 +57,6 @@ Homepage config:
              - field: data.ram
                label: ram
                format: text
-             - field: data.uptime
-               label: uptime
-               format: text
 ```
 
 ## License
