@@ -8,6 +8,7 @@ read -r -d '' COPYRIGHT <<'EOF'
 
 EOF
 
+# with filter
 process_file() {
     local file="$1"
 
