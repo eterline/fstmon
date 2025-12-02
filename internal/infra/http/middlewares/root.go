@@ -95,7 +95,7 @@ func RootMiddleware(ctx context.Context, ipExt IpExtractor, accessWriter io.Writ
 			// Request parsing
 			root.Method = r.Method
 			root.Path = r.URL.Path
-			root.Host = r.Host
+			root.Host = requestHostname(r.Host)
 			root.UserAgent = r.UserAgent()
 			root.EncodingList = r.TransferEncoding
 
