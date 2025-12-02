@@ -25,7 +25,6 @@ process_file() {
     fi
 }
 
-
 find . -type f -name "*.go" | while read -r file; do
     process_file "$file"
 done
