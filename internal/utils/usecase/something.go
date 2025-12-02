@@ -1,6 +1,7 @@
 // Copyright (c) 2025 EterLine (Andrew)
 // This file is part of fstmon.
 // Licensed under the MIT License. See the LICENSE file for details.
+
 package usecase
 
 import "time"
@@ -28,17 +29,38 @@ func MapSlices[K comparable, V any](m map[K]V) (keys []K, values []V) {
 	return keys, values
 }
 
-/*
-Numerable – type constraint matching all numeric types in Go.
-
-	Used for generic IO structures to support arithmetic operations.
-*/
-type Numerable interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64
+func MsToDuration[T number](ms T) time.Duration {
+	return time.Millisecond * time.Duration(ms)
 }
 
-func MsToDuration[T Numerable](ms T) time.Duration {
-	return time.Millisecond * time.Duration(ms)
+func RemoveSliceRepeats[T comparable](s *[]T) {
+	seen := map[T]struct{}{}
+	idx := 0
+
+	for _, v := range *s {
+		if _, ok := seen[v]; !ok {
+			seen[v] = struct{}{}
+			(*s)[idx] = v
+			idx++
+		}
+	}
+
+	*s = (*s)[:idx]
+}
+
+func SliceWithoutRepeats[T comparable](s []T) []T {
+	newS := make([]T, len(s))
+	copy(newS, s)
+	RemoveSliceRepeats(&newS)
+	return newS
+}
+
+func SliceRepeats[T comparable](s []T) map[T]int {
+	ct := map[T]int{}
+
+	for _, v := range s {
+		ct[v]++
+	}
+
+	return ct
 }

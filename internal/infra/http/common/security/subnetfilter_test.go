@@ -101,7 +101,8 @@ func TestAllowedList(t *testing.T) {
 
 func TestAllowedList_NilPool(t *testing.T) {
 	filter := &security.SubnetFilter{}
-	if list, ok := filter.AllowedList(); !ok {
+	list, ok := filter.AllowedList()
+	if ok {
 		t.Errorf("Expected nil AllowedList for nil pool, got %v", list)
 	}
 }

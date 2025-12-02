@@ -46,7 +46,6 @@ task run
 | `--partitions-loop PARTITIONS-LOOP`  |       | Disk I/O metrics update interval (seconds)              | `10`        |
 | `--help`                             | `-h`  | Display help and exit                                   | —           |
 
-
 ## Running
 
 Homepage config:

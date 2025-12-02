@@ -39,6 +39,7 @@ tasks:
     silent: true
     cmds:
       - echo "=== Running Project Tests ==="
+      - go clean -testcache
       # Run tests in all packages, ignore packages without tests
       - go test ./... 2>&1 | grep -v "no test files" || true
       - echo "=== Tests Completed ==="

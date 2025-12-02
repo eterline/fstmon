@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/utils/output"
+	"github.com/eterline/fstmon/internal/utils/usecase"
 	"github.com/eterline/fstmon/pkg/procf"
 	pscpu "github.com/shirou/gopsutil/v4/cpu"
 )
@@ -122,8 +122,8 @@ func (hmc *hardwareMetricCPU) ScrapeCpuMetrics(ctx context.Context) (domain.CpuM
 
 	{
 		f := func(idx int) float64 { return cpuInfo[idx].Mhz }
-		metrics.Average.Load = output.AverageFloat(loads)
-		metrics.Average.Frequency = output.AverageFloatArr(cpuInfo, f)
+		metrics.Average.Load = usecase.AvgVector(loads)
+		metrics.Average.Frequency = usecase.AvgVectorFunc(cpuInfo, f)
 	}
 
 	for i := range metrics.Cores {

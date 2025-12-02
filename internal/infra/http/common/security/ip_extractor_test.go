@@ -135,11 +135,11 @@ func TestExtractIP_Headers(t *testing.T) {
 			}
 
 			extractor := security.NewIpExtractor(true)
-			ip, с, err := extractor.ExtractIP(req)
+			ip, _, err := extractor.ExtractIP(req)
 			if tt.wantOk && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-			if tt.wantOk && с.Addr().String() != tt.wantIP {
+			if tt.wantOk && ip.String() != tt.wantIP {
 				t.Errorf("expected %v, got %v", tt.wantIP, ip)
 			}
 		})
