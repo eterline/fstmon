@@ -91,7 +91,7 @@ func (l Log) AccessLog() (wr io.WriteCloser, err error, wrEnable bool) {
 		return nil, nil, false
 	}
 
-	out := io.WriteCloser(os.Stdout)
+	out := newStdoutWrap(os.Stdout)
 
 	if strings.ToLower(l.AccessLogFile) == "stdout" {
 		return out, nil, true

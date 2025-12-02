@@ -32,6 +32,18 @@ tasks:
       - go clean
       - echo "=== Clean Completed ==="
 
+  fully-clean:
+    desc: "Full cleanup of Go environment and build artifacts"
+    silent: true
+    cmds:
+      - echo "=== Full Go Cleanup ==="
+      - go clean -cache
+      - go clean -testcache
+      - go clean -modcache
+      - go mod tidy
+      - rm -rf ./bin ./dist ./out 2>/dev/null || true
+      - rm -f *.exe *.out *.test 2>/dev/null || true
+      - echo "=== Cleanup Completed ==="
 
   # Project tests
   project-tests:
@@ -97,8 +109,9 @@ tasks:
   build:
     desc: "Build production-ready binary with embedded version info"
     silent: true
-    deps: [clean, tests]
     cmds:
+      - task: fully-clean
+      - task: tests
       - echo "=== Building Production Binary ==="
       - |
         GOOS=linux \
