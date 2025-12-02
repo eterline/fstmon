@@ -17,9 +17,7 @@ task build
 
 For testing build
 ```sh
-task build-dev
-# or for run
-task run
+task run # builds anyway
 ```
 
 ## Arguments
