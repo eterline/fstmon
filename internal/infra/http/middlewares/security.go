@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/eterline/fstmon/internal/infra/http/common/api"
@@ -89,7 +88,6 @@ func AllowedHosts(hosts []string) func(http.Handler) http.Handler {
 
 			root := CtxRoot(r.Context())
 
-			fmt.Println(root.Host)
 			if filter.InAllowedHosts(root.Host) {
 				next.ServeHTTP(w, r)
 				return
