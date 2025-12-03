@@ -56,11 +56,9 @@ func (hmn *hardwareMetricNetwork) ScrapeInterfacesIO(ctx context.Context) (domai
 			ErrScrapeInterfacesIO.Wrap(err)
 	}
 
-	select {
-	case <-ctx.Done():
+	if err := ctx.Err(); err != nil {
 		return domain.InterfacesIOMap{},
-			ErrScrapeMemoryMetrics.Wrap(ctx.Err())
-	default:
+			ErrScrapeInterfacesIO.Wrap(ctx.Err())
 	}
 
 	data := make(domain.InterfacesIOMap, len(io1))

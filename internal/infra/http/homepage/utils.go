@@ -84,6 +84,23 @@ func (q *queryByteBaseSizesBuilder) Add(v uint64) *queryByteBaseSizesBuilder {
 	if q.q > 0 {
 		q.sB.WriteByte(q.delim)
 	}
+
+	q.q++
+
+	vf, unit := sizes.DetermByte2ByteBase(v)
+	fmt.Fprintf(q.sB, "%.2f", vf)
+	q.sB.WriteString(unit.String())
+
+	return q
+}
+
+func (q *queryByteBaseSizesBuilder) AddMul(v, mul uint64) *queryByteBaseSizesBuilder {
+	v *= mul
+
+	if q.q > 0 {
+		q.sB.WriteByte(q.delim)
+	}
+
 	q.q++
 
 	vf, unit := sizes.DetermByte2ByteBase(v)

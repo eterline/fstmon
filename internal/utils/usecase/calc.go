@@ -43,3 +43,18 @@ func AvgVectorFunc[V any, T float_t | int_t | uint_t](s []V, idxItemFunc func(id
 
 	return sum / T(ln)
 }
+
+func PercentOfOverfull[T float_t | int_t | uint_t](full, frac T) float64 {
+	if full == 0 {
+		return 0
+	}
+	return float64(frac) / float64(full) * 100.0
+}
+
+func PercentOf[T float_t | int_t | uint_t](full, frac T) float64 {
+	pct := PercentOfOverfull(full, frac)
+	if pct > 100.0 {
+		pct -= pct - 100.0
+	}
+	return pct
+}

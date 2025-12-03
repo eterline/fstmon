@@ -27,11 +27,9 @@ func (hmm *hardwareMetricMemory) ScrapeMemoryMetrics(ctx context.Context) (domai
 			ErrScrapeMemoryMetrics.Wrap(err)
 	}
 
-	select {
-	case <-ctx.Done():
+	if err := ctx.Err(); err != nil {
 		return domain.MemoryMetrics{},
 			ErrScrapeMemoryMetrics.Wrap(ctx.Err())
-	default:
 	}
 
 	total := uwPtr(mem.MemTotal)

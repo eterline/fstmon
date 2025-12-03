@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/eterline/fstmon/internal/domain"
+	"github.com/eterline/fstmon/internal/utils/sizes"
+	"github.com/eterline/fstmon/internal/utils/usecase"
 )
 
 // ============================ CPU dto ============================
@@ -75,18 +77,18 @@ type DTOMemory struct {
 func Domain2DTOMemory(v domain.MemoryMetrics) *DTOMemory {
 	return &DTOMemory{
 		RAM: DTOMemoryT{
-			Total:         NewQBBSBuilder(0).Add(v.Total).Build(),
-			Used:          NewQBBSBuilder(0).Add(v.Used).Build(),
-			Free:          NewQBBSBuilder(0).Add(v.Free).Build(),
-			UsedPercent:   fmt.Sprintf("%.1f%%", v.UsedPercent),
-			UsedTotal:     NewQBBSBuilder('/').Add(v.Used).Add(v.Total).Build(),
-			UsedTotalFree: NewQBBSBuilder('/').Add(v.Used).Add(v.Total).Add(v.Free).Build(),
+			Total:         NewQBBSBuilder(0).Add(sizes.KB.In(v.Total)).Build(),
+			Used:          NewQBBSBuilder(0).Add(sizes.KB.In(v.Used)).Build(),
+			Free:          NewQBBSBuilder(0).Add(sizes.KB.In(v.Free)).Build(),
+			UsedPercent:   fmt.Sprintf("%.1f%%", usecase.PercentOf(v.Total, v.Used)),
+			UsedTotal:     NewQBBSBuilder('/').Add(sizes.KB.In(v.Used)).Add(sizes.KB.In(v.Total)).Build(),
+			UsedTotalFree: NewQBBSBuilder('/').Add(sizes.KB.In(v.Used)).Add(sizes.KB.In(v.Total)).Add(sizes.KB.In(v.Free)).Build(),
 		},
 		Swap: DTOMemoryT{
 			Total:         NewQBBSBuilder(0).Add(v.SwapTotal).Build(),
 			Used:          NewQBBSBuilder(0).Add(v.SwapUsed).Build(),
 			Free:          NewQBBSBuilder(0).Add(v.SwapFree).Build(),
-			UsedPercent:   fmt.Sprintf("%.1f%%", v.SwapUsedPercent),
+			UsedPercent:   fmt.Sprintf("%.1f%%", usecase.PercentOf(v.SwapTotal, v.SwapUsed)),
 			UsedTotal:     NewQBBSBuilder('/').Add(v.SwapUsed).Add(v.SwapTotal).Build(),
 			UsedTotalFree: NewQBBSBuilder('/').Add(v.SwapUsed).Add(v.SwapTotal).Add(v.SwapFree).Build(),
 		},

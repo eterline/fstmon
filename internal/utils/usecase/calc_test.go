@@ -104,3 +104,79 @@ func Test_AvgVectorFunc(t *testing.T) {
 		}
 	})
 }
+
+func Test_PercentOfOverfull(t *testing.T) {
+	type TCase struct {
+		full     any
+		frac     any
+		expected float64
+	}
+
+	tests := []TCase{
+		{100, 50, 50},
+		{100, 100, 100},
+		{100, 150, 150},
+		{200, 25, 12.5},
+		{uint(100), uint(40), 40},
+		{uint(100), uint(200), 200},
+		{float64(8), float64(1), 12.5},
+	}
+
+	for _, tt := range tests {
+		var got float64
+
+		switch full := tt.full.(type) {
+		case int:
+			got = usecase.PercentOfOverfull(full, tt.frac.(int))
+		case uint:
+			got = usecase.PercentOfOverfull(full, tt.frac.(uint))
+		case float64:
+			got = usecase.PercentOfOverfull(full, tt.frac.(float64))
+		default:
+			t.Fatalf("unsupported type in test")
+		}
+
+		if got != tt.expected {
+			t.Errorf("PercentOfOverfull(%v, %v) = %v; want %v",
+				tt.full, tt.frac, got, tt.expected)
+		}
+	}
+}
+
+func Test_PercentOf(t *testing.T) {
+	type TCase struct {
+		full     any
+		frac     any
+		expected float64
+	}
+
+	tests := []TCase{
+		{100, 50, 50},
+		{100, 100, 100},
+		{100, 150, 100}, // clamp
+		{100, 999, 100}, // clamp
+		{8, 1, 12.5},
+		{uint(100), uint(200), 100},
+		{float64(100), float64(150), 100},
+	}
+
+	for _, tt := range tests {
+		var got float64
+
+		switch full := tt.full.(type) {
+		case int:
+			got = usecase.PercentOf(full, tt.frac.(int))
+		case uint:
+			got = usecase.PercentOf(full, tt.frac.(uint))
+		case float64:
+			got = usecase.PercentOf(full, tt.frac.(float64))
+		default:
+			t.Fatalf("unsupported type in test")
+		}
+
+		if got != tt.expected {
+			t.Errorf("PercentOf(%v, %v) = %v; want %v",
+				tt.full, tt.frac, got, tt.expected)
+		}
+	}
+}

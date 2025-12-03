@@ -30,11 +30,9 @@ func (hms *hardwareMetricSystem) ScrapeSystemInfo(ctx context.Context) (domain.S
 			ErrScrapeSystemInfo.Wrap(err)
 	}
 
-	select {
-	case <-ctx.Done():
+	if err := ctx.Err(); err != nil {
 		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(ctx.Err())
-	default:
 	}
 
 	uptime, err := hms.readProfsUptime()
@@ -43,11 +41,9 @@ func (hms *hardwareMetricSystem) ScrapeSystemInfo(ctx context.Context) (domain.S
 			ErrScrapeSystemInfo.Wrap(err)
 	}
 
-	select {
-	case <-ctx.Done():
+	if err := ctx.Err(); err != nil {
 		return domain.SystemInfo{},
 			ErrScrapeSystemInfo.Wrap(ctx.Err())
-	default:
 	}
 
 	r, t := hms.readRunProcs()

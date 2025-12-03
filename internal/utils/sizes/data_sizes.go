@@ -21,6 +21,10 @@ const (
 	EB                                   // Exabyte
 )
 
+func (d SizeByteBase) In(v uint64) uint64 {
+	return v * uint64(d)
+}
+
 func (d SizeByteBase) String() string {
 	switch d {
 	case Byte:
@@ -61,13 +65,13 @@ func DetermByte2ByteBase(bytesSize uint64) (float64, SizeByteBase) {
 
 // Bit-based sizes
 const (
-	Bit SizeBitBase = 1 << (10 * iota) * 8 // 1 bit, 1024 bits / 8 = 128 bytes, ...
-	Kb                                     // Kilobit
-	Mb                                     // Megabit
-	Gb                                     // Gigabit
-	Tb                                     // Terabit
-	Pb                                     // Petabit
-	Eb                                     // Exabit
+	Bit SizeBitBase = 1 << (10 * iota) // 1, 1024, 1024^2, ...
+	Kb
+	Mb
+	Gb
+	Tb
+	Pb
+	Eb
 )
 
 func (d SizeBitBase) String() string {
@@ -91,21 +95,27 @@ func (d SizeBitBase) String() string {
 	}
 }
 
-func DetermByte2BitBase(bitsSize uint64) (float64, SizeBitBase) {
+func DetermByte2BitBase(bytesSize uint64) (float64, SizeBitBase) {
+	return DetermBitBase(bytesSize * 8)
+}
+
+func DetermBitBase(bitsSize uint64) (float64, SizeBitBase) {
 	if bitsSize == 0 {
 		return 0, Bit
 	}
 
 	msb := bits.Len64(bitsSize) - 1
+
 	unitExp := msb / 10
 	if unitExp > 6 {
 		unitExp = 6
 	}
 
 	unit := uint64(1 << (10 * unitExp))
+
 	value := float64(bitsSize) / float64(unit)
 
-	return value, SizeBitBase(unit * 8)
+	return value, SizeBitBase(unit)
 }
 
 // SizeISOMetric — 1000-based SI units (Extended)
@@ -113,19 +123,20 @@ type SizeISOMetric uint64
 
 // 1000^n units starting from K (10^3) up to Y (10^24)
 const (
-	ZERO SizeISOMetric = iota
-	K                  // kilo  (10^3)
-	M                  // mega  (10^6)
-	G                  // giga  (10^9)
-	T                  // tera  (10^12)
-	P                  // peta  (10^15)
-	E                  // exa   (10^18)
-	Z                  // zetta (10^21)
-	Y                  // yotta (10^24)
+	ZERO SizeISOMetric = 0
+
+	K SizeISOMetric = 1_000
+	M SizeISOMetric = 1_000_000             // 1000^2
+	G SizeISOMetric = 1_000_000_000         // 1000^3
+	T SizeISOMetric = 1_000_000_000_000     // 1000^4
+	P SizeISOMetric = 1_000_000_000_000_000 // 1000^5
+	E SizeISOMetric = 1_000_000_000_000_000_000
 )
 
 func (u SizeISOMetric) String() string {
 	switch u {
+	case ZERO:
+		return ""
 	case K:
 		return "K"
 	case M:
@@ -136,59 +147,32 @@ func (u SizeISOMetric) String() string {
 		return "T"
 	case P:
 		return "P"
-	case E:
-		return "E"
-	case Z:
-		return "Z"
-	case Y:
-		return "Y"
 	default:
-		return ""
+		return "E"
 	}
 }
 
 // DetermMetricBase — chooses the best SI unit (K..Y) for the given value.
 // Returns normalized value + the matched SI unit.
 func DetermMetricBase(size uint64) (float64, SizeISOMetric) {
-	if size < 1000 {
+	if size < 1_000 {
 		return float64(size), ZERO
 	}
 
-	msb := bits.Len64(size) - 1
-	unitExp := msb / 10
-	if unitExp > 8 {
-		unitExp = 8
-	}
-
-	// calculate 1000^unitExp
-	var unit uint64 = 1
-	for i := 0; i < unitExp; i++ {
-		unit *= 1000
-	}
-
-	value := float64(size) / float64(unit)
-
-	var metric SizeISOMetric
-	switch unitExp {
-	case 1:
-		metric = K
-	case 2:
-		metric = M
-	case 3:
-		metric = G
-	case 4:
-		metric = T
-	case 5:
-		metric = P
-	case 6:
-		metric = E
-	case 7:
-		metric = Z
-	case 8:
-		metric = Y
+	// exact thresholds for units
+	switch {
+	case size < 1_000_000:
+		return float64(size) / float64(K), K
+	case size < 1_000_000_000:
+		return float64(size) / float64(M), M
+	case size < 1_000_000_000_000:
+		return float64(size) / float64(G), G
+	case size < 1_000_000_000_000_000:
+		return float64(size) / float64(T), T
+	case size < 1_000_000_000_000_000_000:
+		return float64(size) / float64(P), P
 	default:
-		metric = K
+		// 1000^6 still fits uint64
+		return float64(size) / float64(E), E
 	}
-
-	return value, metric
 }
