@@ -5,11 +5,30 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/eterline/fstmon/internal/app"
 	"github.com/eterline/fstmon/internal/config"
+	"github.com/eterline/fstmon/internal/infra/http/common/security"
 	"github.com/eterline/fstmon/internal/log"
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
+
+func init() {
+	toolkit.RegisterCommand("newtoken", func(args ...string) error {
+		ti, err := security.NewIssuedTokenAuthProvide(true)
+		if err != nil {
+			return err
+		}
+		token, err := ti.Issue()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("token: %s\n", token)
+		return nil
+	})
+}
 
 // -ladflags variables
 var (
@@ -53,7 +72,16 @@ var (
 func main() {
 	root := toolkit.InitAppStart(
 		func() error {
-			err := config.ParseArgs(&cfg)
+			err, ok := app.RunAdditional()
+			if err != nil {
+				return err
+			}
+
+			if ok {
+				os.Exit(0)
+			}
+
+			err = config.ParseArgs(&cfg)
 			if err != nil {
 				return err
 			}
