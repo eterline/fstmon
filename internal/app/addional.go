@@ -17,10 +17,10 @@ func RunAdditional() (error, bool) {
 	cmdArgs := args[1:]
 
 	// check if command is registered
-	err := toolkit.ExecuteCommand(cmdName, cmdArgs...)
+	err, ok := toolkit.ExecuteCommand(cmdName, cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("failed to execute command %s: %w", cmdName, err), false
+		return fmt.Errorf("failed to execute command '%s': %w", cmdName, err), false
 	}
 
-	return nil, true
+	return nil, ok
 }

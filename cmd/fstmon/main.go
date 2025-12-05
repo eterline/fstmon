@@ -56,7 +56,7 @@ var (
 		Secure: config.Secure{
 			AllowedSubnets: []string{},
 			AllowedHosts:   []string{},
-			AuthToken:      []string{},
+			AuthToken:      false,
 		},
 		Monitor: config.Monitor{
 			Cpu:       10,

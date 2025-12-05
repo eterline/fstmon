@@ -49,13 +49,13 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 		root.MustStopApp(1)
 	}
 
-	tokenAuth, err := security.NewTokenAuthProvide(security.PolicyMid, cfg.AuthToken...)
+	tokenAuth, err := security.NewIssuedTokenAuthProvide(cfg.AuthToken)
 	if err != nil {
 		log.Error("token auth initialization error", "error", err)
 		root.MustStopApp(1)
 	}
 
-	log.Warn("token auth setup", "enabled", tokenAuth.Enabled(), "registered", len(cfg.AuthToken))
+	log.Warn("token auth setup", "enabled", tokenAuth.Enabled())
 
 	// ========================================================
 

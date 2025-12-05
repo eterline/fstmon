@@ -74,8 +74,9 @@ type (
 	Secure struct {
 		AllowedHosts   []string `arg:"--sni,-h" help:"Server allowed request hosts"`
 		AllowedSubnets []string `arg:"--subnets,-s" help:"Server allowed source subnets/IPs"`
-		AuthToken      []string `arg:"--token,-t,env:TOKEN" help:"Server auth token string"`
-		ParseIpHeader  bool     `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
+		//		AuthToken      []string `arg:"--token,-t,env:TOKEN" help:"Server auth token string"`
+		AuthToken     bool `arg:"--token,-t" help:"Server auth token is enabled"`
+		ParseIpHeader bool `arg:"--ip-header" help:"Enable parsing reverse proxy headers"`
 	}
 
 	Configuration struct {

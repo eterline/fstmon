@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eterline/dumbsec/tokenissuer"
+	"github.com/eterline/fstmon/pkg/tokenissuer"
 )
 
 func Test_NewTokenIssuer_Valid(t *testing.T) {

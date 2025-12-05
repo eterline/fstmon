@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -30,16 +31,20 @@ func RegisterCommand(name string, fn CommandFunc) error {
 
 // ExecuteCommand executes a registered command by name with arguments.
 // Returns error if command is not found or function itself returns error.
-func ExecuteCommand(name string, args ...string) error {
+func ExecuteCommand(name string, args ...string) (error, bool) {
+	if strings.HasPrefix(name, "-") {
+		return nil, false
+	}
+
 	mu.RLock()
 	fn, ok := commandRegistry[name]
 	mu.RUnlock()
 
 	if !ok {
-		return fmt.Errorf("command %s not found", name)
+		return fmt.Errorf("command %s not found", name), false
 	}
 
-	return fn(args...)
+	return fn(args...), true
 }
 
 // ListCommands returns a list of all registered command names.
