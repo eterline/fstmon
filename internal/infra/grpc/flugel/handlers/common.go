@@ -1,10 +1,15 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"time"
+
+	pb "github.com/eterline/fstmon/internal/infra/grpc/flugel/common"
+	"github.com/eterline/fstmon/internal/log"
+	"google.golang.org/grpc"
 )
 
 type ActualStateStore interface {
@@ -41,4 +46,17 @@ func newHandlersGroup(l *slog.Logger, s ActualStateStore) handlersGroup {
 		log:   l,
 		store: s,
 	}
+}
+
+// TODO: make another app instance for grpc agent
+func RegisterToGrpcServer(ctx context.Context, s *grpc.Server, a ActualStateStore) {
+	log := log.MustLoggerFromContext(ctx)
+	log.Info("init grpc server handlers")
+
+	pb.RegisterCpuServiceServer(s, NewCpuHandlers(log, a))
+	pb.RegisterNetworkServiceServer(s, NewNetworkHandlers(log, a))
+	pb.RegisterSystemServiceServer(s, NewSystemHandlers(log, a))
+	pb.RegisterMemoryServiceServer(s, NewMemoryHandlers(log, a))
+	pb.RegisterThermalServiceServer(s, NewThernalHandlers(log, a))
+	pb.RegisterStorageServiceServer(s, NewStorageHandlers(log, a))
 }

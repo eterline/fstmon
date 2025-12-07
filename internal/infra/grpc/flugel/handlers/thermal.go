@@ -10,7 +10,7 @@ import (
 )
 
 type thernalHandlers struct {
-	common.UnimplementedCpuServiceServer
+	common.UnimplementedThermalServiceServer
 	handlersGroup
 }
 

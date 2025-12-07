@@ -10,7 +10,7 @@ import (
 )
 
 type storageHandlers struct {
-	common.UnimplementedCpuServiceServer
+	common.UnimplementedStorageServiceServer
 	handlersGroup
 }
 

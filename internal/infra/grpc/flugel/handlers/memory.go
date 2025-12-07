@@ -10,7 +10,7 @@ import (
 )
 
 type memoryHandlers struct {
-	common.UnimplementedCpuServiceServer
+	common.UnimplementedMemoryServiceServer
 	handlersGroup
 }
 
