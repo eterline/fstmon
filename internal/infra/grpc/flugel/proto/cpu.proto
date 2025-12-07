@@ -4,6 +4,8 @@ package fstmon.cpu;
 
 import "common.proto";
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 // Static information about a CPU core
 message CpuCoreInfo {
     int32 physical_id = 1;

@@ -22,6 +22,19 @@ tasks:
     cmds:
       - ./add_copyright.sh
 
+  gen-proto:
+    desc: "Generate gRPC proto implementation for server"
+    silent: true
+    cmds:
+      - echo "=== Start proto files generate ==="
+      - |
+        protoc \
+        --proto_path=./internal/infra/grpc/flugel/proto \
+        --go_out=./internal/infra/grpc/flugel/common --go_opt=paths=source_relative \
+        --go-grpc_out=./internal/infra/grpc/flugel/common --go-grpc_opt=paths=source_relative \
+        ./internal/infra/grpc/flugel/proto/*.proto
+      - echo "=== Generate finished ==="
+
   # Clean Go environment
   clean:
     desc: "Clean Go modules and build artifacts"

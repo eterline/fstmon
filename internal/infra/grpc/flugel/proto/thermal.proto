@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package fstmon.thermal;
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 // Thermal metrics
 message ThermalMetrics {
     double current = 1;

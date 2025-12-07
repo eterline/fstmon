@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package fstmon.memory;
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 message MemoryMetrics {
     uint64 total = 1;
     uint64 available = 2;

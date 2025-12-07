@@ -5,6 +5,8 @@ package fstmon.common;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 // IO for uint64
 message IOUint64 {
     uint64 summary = 1;

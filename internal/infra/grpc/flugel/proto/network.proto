@@ -4,6 +4,8 @@ package fstmon.network;
 
 import "common.proto";
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 // Metrics of a network interface
 message InterfaceIO {
     fstmon.common.IOUint64 bytes_total = 1;

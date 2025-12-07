@@ -5,6 +5,8 @@ package fstmon.storage;
 import "google/protobuf/duration.proto";
 import "common.proto";
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 // Partition usage (dynamic)
 message PartitionUsage {
     uint64 total = 1;

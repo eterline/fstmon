@@ -4,6 +4,8 @@ package fstmon.system;
 
 import "google/protobuf/duration.proto";
 
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
 message SystemInfo {
     google.protobuf.Duration uptime = 1;
     google.protobuf.Duration idle = 2;
