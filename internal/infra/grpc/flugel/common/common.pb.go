@@ -9,10 +9,7 @@ package common
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -23,236 +20,63 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// IO for uint64
-type IOUint64 struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       uint64                 `protobuf:"varint,1,opt,name=summary,proto3" json:"summary,omitempty"`
-	Rx            uint64                 `protobuf:"varint,2,opt,name=rx,proto3" json:"rx,omitempty"`
-	Tx            uint64                 `protobuf:"varint,3,opt,name=tx,proto3" json:"tx,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *IOUint64) Reset() {
-	*x = IOUint64{}
-	mi := &file_common_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *IOUint64) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*IOUint64) ProtoMessage() {}
-
-func (x *IOUint64) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use IOUint64.ProtoReflect.Descriptor instead.
-func (*IOUint64) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *IOUint64) GetSummary() uint64 {
-	if x != nil {
-		return x.Summary
-	}
-	return 0
-}
-
-func (x *IOUint64) GetRx() uint64 {
-	if x != nil {
-		return x.Rx
-	}
-	return 0
-}
-
-func (x *IOUint64) GetTx() uint64 {
-	if x != nil {
-		return x.Tx
-	}
-	return 0
-}
-
-// IO for float64
-type IOFloat64 struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       float64                `protobuf:"fixed64,1,opt,name=summary,proto3" json:"summary,omitempty"`
-	Rx            float64                `protobuf:"fixed64,2,opt,name=rx,proto3" json:"rx,omitempty"`
-	Tx            float64                `protobuf:"fixed64,3,opt,name=tx,proto3" json:"tx,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *IOFloat64) Reset() {
-	*x = IOFloat64{}
-	mi := &file_common_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *IOFloat64) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*IOFloat64) ProtoMessage() {}
-
-func (x *IOFloat64) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use IOFloat64.ProtoReflect.Descriptor instead.
-func (*IOFloat64) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *IOFloat64) GetSummary() float64 {
-	if x != nil {
-		return x.Summary
-	}
-	return 0
-}
-
-func (x *IOFloat64) GetRx() float64 {
-	if x != nil {
-		return x.Rx
-	}
-	return 0
-}
-
-func (x *IOFloat64) GetTx() float64 {
-	if x != nil {
-		return x.Tx
-	}
-	return 0
-}
-
-// IO for durations
-type IODuration struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       *durationpb.Duration   `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
-	Rx            *durationpb.Duration   `protobuf:"bytes,2,opt,name=rx,proto3" json:"rx,omitempty"`
-	Tx            *durationpb.Duration   `protobuf:"bytes,3,opt,name=tx,proto3" json:"tx,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *IODuration) Reset() {
-	*x = IODuration{}
-	mi := &file_common_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *IODuration) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*IODuration) ProtoMessage() {}
-
-func (x *IODuration) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use IODuration.ProtoReflect.Descriptor instead.
-func (*IODuration) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *IODuration) GetSummary() *durationpb.Duration {
-	if x != nil {
-		return x.Summary
-	}
-	return nil
-}
-
-func (x *IODuration) GetRx() *durationpb.Duration {
-	if x != nil {
-		return x.Rx
-	}
-	return nil
-}
-
-func (x *IODuration) GetTx() *durationpb.Duration {
-	if x != nil {
-		return x.Tx
-	}
-	return nil
-}
-
 var File_common_proto protoreflect.FileDescriptor
 
 const file_common_proto_rawDesc = "" +
 	"\n" +
-	"\fcommon.proto\x12\rfstmon.common\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"D\n" +
-	"\bIOUint64\x12\x18\n" +
-	"\asummary\x18\x01 \x01(\x04R\asummary\x12\x0e\n" +
-	"\x02rx\x18\x02 \x01(\x04R\x02rx\x12\x0e\n" +
-	"\x02tx\x18\x03 \x01(\x04R\x02tx\"E\n" +
-	"\tIOFloat64\x12\x18\n" +
-	"\asummary\x18\x01 \x01(\x01R\asummary\x12\x0e\n" +
-	"\x02rx\x18\x02 \x01(\x01R\x02rx\x12\x0e\n" +
-	"\x02tx\x18\x03 \x01(\x01R\x02tx\"\x97\x01\n" +
+	"\fcommon.proto\x12\rfstmon.common\x1a\tdto.proto2\xa3\x05\n" +
+	"\x12MachineInfoService\x12K\n" +
 	"\n" +
-	"IODuration\x123\n" +
-	"\asummary\x18\x01 \x01(\v2\x19.google.protobuf.DurationR\asummary\x12)\n" +
-	"\x02rx\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x02rx\x12)\n" +
-	"\x02tx\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\x02txB>Z<github.com/eterline/fstmon/internal/infra/grpc/flugel/commonb\x06proto3"
+	"GetCpuInfo\x12\x1d.fstmon.dto.GetCpuInfoRequest\x1a\x1e.fstmon.dto.CpuPackageResponse\x12Q\n" +
+	"\rGetCpuMetrics\x12 .fstmon.dto.GetCpuMetricsRequest\x1a\x1e.fstmon.dto.CpuMetricsResponse\x12W\n" +
+	"\x0fGetInterfacesIO\x12\".fstmon.dto.GetInterfacesIORequest\x1a .fstmon.dto.InterfacesIOResponse\x12Q\n" +
+	"\rGetSystemInfo\x12 .fstmon.dto.GetSystemInfoRequest\x1a\x1e.fstmon.dto.SystemInfoResponse\x12Z\n" +
+	"\x10GetMemoryMetrics\x12#.fstmon.dto.GetMemoryMetricsRequest\x1a!.fstmon.dto.MemoryMetricsResponse\x12H\n" +
+	"\n" +
+	"GetThermal\x12\x1d.fstmon.dto.GetThermalRequest\x1a\x1b.fstmon.dto.ThermalResponse\x12Q\n" +
+	"\rGetPartitions\x12 .fstmon.dto.GetPartitionsRequest\x1a\x1e.fstmon.dto.PartitionsResponse\x12H\n" +
+	"\tGetDiskIO\x12\x1c.fstmon.dto.GetDiskIORequest\x1a\x1d.fstmon.dto.DiskIOMapResponseB>Z<github.com/eterline/fstmon/internal/infra/grpc/flugel/commonb\x06proto3"
 
-var (
-	file_common_proto_rawDescOnce sync.Once
-	file_common_proto_rawDescData []byte
-)
-
-func file_common_proto_rawDescGZIP() []byte {
-	file_common_proto_rawDescOnce.Do(func() {
-		file_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)))
-	})
-	return file_common_proto_rawDescData
-}
-
-var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_common_proto_goTypes = []any{
-	(*IOUint64)(nil),            // 0: fstmon.common.IOUint64
-	(*IOFloat64)(nil),           // 1: fstmon.common.IOFloat64
-	(*IODuration)(nil),          // 2: fstmon.common.IODuration
-	(*durationpb.Duration)(nil), // 3: google.protobuf.Duration
+	(*GetCpuInfoRequest)(nil),       // 0: fstmon.dto.GetCpuInfoRequest
+	(*GetCpuMetricsRequest)(nil),    // 1: fstmon.dto.GetCpuMetricsRequest
+	(*GetInterfacesIORequest)(nil),  // 2: fstmon.dto.GetInterfacesIORequest
+	(*GetSystemInfoRequest)(nil),    // 3: fstmon.dto.GetSystemInfoRequest
+	(*GetMemoryMetricsRequest)(nil), // 4: fstmon.dto.GetMemoryMetricsRequest
+	(*GetThermalRequest)(nil),       // 5: fstmon.dto.GetThermalRequest
+	(*GetPartitionsRequest)(nil),    // 6: fstmon.dto.GetPartitionsRequest
+	(*GetDiskIORequest)(nil),        // 7: fstmon.dto.GetDiskIORequest
+	(*CpuPackageResponse)(nil),      // 8: fstmon.dto.CpuPackageResponse
+	(*CpuMetricsResponse)(nil),      // 9: fstmon.dto.CpuMetricsResponse
+	(*InterfacesIOResponse)(nil),    // 10: fstmon.dto.InterfacesIOResponse
+	(*SystemInfoResponse)(nil),      // 11: fstmon.dto.SystemInfoResponse
+	(*MemoryMetricsResponse)(nil),   // 12: fstmon.dto.MemoryMetricsResponse
+	(*ThermalResponse)(nil),         // 13: fstmon.dto.ThermalResponse
+	(*PartitionsResponse)(nil),      // 14: fstmon.dto.PartitionsResponse
+	(*DiskIOMapResponse)(nil),       // 15: fstmon.dto.DiskIOMapResponse
 }
 var file_common_proto_depIdxs = []int32{
-	3, // 0: fstmon.common.IODuration.summary:type_name -> google.protobuf.Duration
-	3, // 1: fstmon.common.IODuration.rx:type_name -> google.protobuf.Duration
-	3, // 2: fstmon.common.IODuration.tx:type_name -> google.protobuf.Duration
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0,  // 0: fstmon.common.MachineInfoService.GetCpuInfo:input_type -> fstmon.dto.GetCpuInfoRequest
+	1,  // 1: fstmon.common.MachineInfoService.GetCpuMetrics:input_type -> fstmon.dto.GetCpuMetricsRequest
+	2,  // 2: fstmon.common.MachineInfoService.GetInterfacesIO:input_type -> fstmon.dto.GetInterfacesIORequest
+	3,  // 3: fstmon.common.MachineInfoService.GetSystemInfo:input_type -> fstmon.dto.GetSystemInfoRequest
+	4,  // 4: fstmon.common.MachineInfoService.GetMemoryMetrics:input_type -> fstmon.dto.GetMemoryMetricsRequest
+	5,  // 5: fstmon.common.MachineInfoService.GetThermal:input_type -> fstmon.dto.GetThermalRequest
+	6,  // 6: fstmon.common.MachineInfoService.GetPartitions:input_type -> fstmon.dto.GetPartitionsRequest
+	7,  // 7: fstmon.common.MachineInfoService.GetDiskIO:input_type -> fstmon.dto.GetDiskIORequest
+	8,  // 8: fstmon.common.MachineInfoService.GetCpuInfo:output_type -> fstmon.dto.CpuPackageResponse
+	9,  // 9: fstmon.common.MachineInfoService.GetCpuMetrics:output_type -> fstmon.dto.CpuMetricsResponse
+	10, // 10: fstmon.common.MachineInfoService.GetInterfacesIO:output_type -> fstmon.dto.InterfacesIOResponse
+	11, // 11: fstmon.common.MachineInfoService.GetSystemInfo:output_type -> fstmon.dto.SystemInfoResponse
+	12, // 12: fstmon.common.MachineInfoService.GetMemoryMetrics:output_type -> fstmon.dto.MemoryMetricsResponse
+	13, // 13: fstmon.common.MachineInfoService.GetThermal:output_type -> fstmon.dto.ThermalResponse
+	14, // 14: fstmon.common.MachineInfoService.GetPartitions:output_type -> fstmon.dto.PartitionsResponse
+	15, // 15: fstmon.common.MachineInfoService.GetDiskIO:output_type -> fstmon.dto.DiskIOMapResponse
+	8,  // [8:16] is the sub-list for method output_type
+	0,  // [0:8] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_init() }
@@ -260,19 +84,19 @@ func file_common_proto_init() {
 	if File_common_proto != nil {
 		return
 	}
+	file_dto_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   0,
 			NumExtensions: 0,
-			NumServices:   0,
+			NumServices:   1,
 		},
 		GoTypes:           file_common_proto_goTypes,
 		DependencyIndexes: file_common_proto_depIdxs,
-		MessageInfos:      file_common_proto_msgTypes,
 	}.Build()
 	File_common_proto = out.File
 	file_common_proto_goTypes = nil

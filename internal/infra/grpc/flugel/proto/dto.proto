@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+package fstmon.dto;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+
+// ============================ Basic structures ============================
+
+// IO for uint64
+message IOUint64 {
+    uint64 summary = 1;
+    uint64 rx = 2;
+    uint64 tx = 3;
+}
+
+// IO for float64
+message IOFloat64 {
+    double summary = 1;
+    double rx = 2;
+    double tx = 3;
+}
+
+// IO for durations
+message IODuration {
+    google.protobuf.Duration summary = 1;
+    google.protobuf.Duration rx = 2;
+    google.protobuf.Duration tx = 3;
+}
+
+// ============================ CPU structures ============================
+
+message CpuCoreInfo {
+    int32 physical_id = 1;
+    int32 core_id = 2;
+    int32 siblings = 3;
+    int32 cache_kb = 4;
+}
+
+message CpuPackage {
+    string vendor = 1;
+    string model_name = 2;
+    string microcode = 3;
+    repeated string flags = 4;
+    repeated CpuCoreInfo cores = 5;
+}
+
+message CpuCoreMetrics {
+    double load = 1;
+    double frequency = 2;
+}
+
+message CpuMetrics {
+    CpuCoreMetrics average = 1;
+    repeated CpuCoreMetrics cores = 2;
+}
+
+message GetCpuInfoRequest {}
+message GetCpuMetricsRequest {}
+
+message CpuPackageResponse {
+    CpuPackage cpu = 1;
+}
+message CpuMetricsResponse {
+    CpuMetrics metrics = 1;
+}
+
+// ============================ Networking structures ============================
+
+message InterfaceIO {
+    IOUint64 bytes_total = 1;
+    IOUint64 packets_total = 2;
+
+    IOUint64 error_packets_total = 3;
+    IOUint64 drop_packets_total = 4;
+
+    IOUint64 bytes_per_sec = 5;
+    IOUint64 packets_per_sec = 6;
+}
+
+message InterfacesIO {
+    map<string, InterfaceIO> interfaces = 1;
+}
+
+message GetInterfacesIORequest {}
+
+message InterfacesIOResponse {
+    InterfacesIO data = 1;
+}
+
+// ============================ System structures ============================
+
+message SystemInfo {
+    google.protobuf.Duration uptime = 1;
+    google.protobuf.Duration idle = 2;
+
+    double load1 = 3;
+    double load5 = 4;
+    double load15 = 5;
+
+    int32 running_procs = 6;
+    int32 total_procs = 7;
+}
+
+message GetSystemInfoRequest {}
+message SystemInfoResponse {
+    SystemInfo system = 1;
+}
+
+// ============================ Memory structures ============================
+
+message MemoryMetrics {
+    uint64 total = 1;
+    uint64 available = 2;
+    uint64 used = 3;
+    uint64 free = 4;
+
+    uint64 swap_total = 5;
+    uint64 swap_available = 6;
+    uint64 swap_used = 7;
+    uint64 swap_free = 8;
+
+    double used_percent = 9;
+    double swap_used_percent = 10;
+}
+
+message GetMemoryMetricsRequest {}
+
+message MemoryMetricsResponse {
+    MemoryMetrics memory = 1;
+}
+
+// ============================ Thermal structures ============================
+
+message ThermalMetrics {
+    double current = 1;
+    double max = 2;
+    double crit = 3;
+}
+
+message ThermalMetricsMap {
+    map<string, ThermalMetrics> sensors = 1;
+}
+
+message GetThermalRequest {}
+
+message ThermalResponse {
+    ThermalMetricsMap metrics = 1;
+}
+
+// ============================ Storage structures ============================
+
+message PartitionUsage {
+    uint64 total = 1;
+    uint64 used = 2;
+    uint64 free = 3;
+    double used_percent = 4;
+
+    uint64 inodes_total = 5;
+    uint64 inodes_used = 6;
+    uint64 inodes_free = 7;
+    double inodes_used_percent = 8;
+}
+
+message Partition {
+    string device = 1;
+    string mount = 2;
+    string filesystem = 3;
+    repeated string options = 4;
+    PartitionUsage usage = 5;
+}
+
+message Partitions {
+    repeated Partition partitions = 1;
+}
+
+
+message DiskIO {
+    uint64 iops_in_progress = 1;
+
+    IOUint64 ops = 2;
+    IOUint64 merged_ops = 3;
+    IOUint64 bytes = 4;
+
+    IOUint64 ops_per_sec = 5;
+    IOUint64 merged_ops_per_sec = 6;
+    IOUint64 bytes_per_sec = 7;
+
+    IODuration time = 8;
+    google.protobuf.Duration io_time = 9;
+    google.protobuf.Duration weighted_io = 10;
+}
+
+message DiskIOMap {
+    map<string, DiskIO> disks = 1;
+}
+
+message GetPartitionsRequest {}
+message GetDiskIORequest {}
+
+message PartitionsResponse { Partitions partitions = 1; }
+message DiskIOMapResponse { DiskIOMap io = 1; }
