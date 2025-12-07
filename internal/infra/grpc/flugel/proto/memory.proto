@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package fstmon.memory;
+
+message MemoryMetrics {
+    uint64 total = 1;
+    uint64 available = 2;
+    uint64 used = 3;
+    uint64 free = 4;
+
+    uint64 swap_total = 5;
+    uint64 swap_available = 6;
+    uint64 swap_used = 7;
+    uint64 swap_free = 8;
+
+    double used_percent = 9;
+    double swap_used_percent = 10;
+}
+
+service MemoryService {
+    rpc GetMemoryMetrics(GetMemoryMetricsRequest) returns (MemoryMetricsResponse);
+}
+
+message GetMemoryMetricsRequest {}
+
+message MemoryMetricsResponse {
+    MemoryMetrics memory = 1;
+}

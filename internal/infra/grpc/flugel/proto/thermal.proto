@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package fstmon.thermal;
+
+// Thermal metrics
+message ThermalMetrics {
+    double current = 1;
+    double max = 2;
+    double crit = 3;
+}
+
+message ThermalMetricsMap {
+    map<string, ThermalMetrics> sensors = 1;
+}
+
+service ThermalService {
+    rpc GetThermal(GetThermalRequest) returns (ThermalResponse);
+}
+
+message GetThermalRequest {}
+
+message ThermalResponse {
+    ThermalMetricsMap metrics = 1;
+}

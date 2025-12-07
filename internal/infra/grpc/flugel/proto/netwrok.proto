@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package fstmon.network;
+
+import "common.proto";
+
+// Metrics of a network interface
+message InterfaceIO {
+    fstmon.common.IOUint64 bytes_total = 1;
+    fstmon.common.IOUint64 packets_total = 2;
+    fstmon.common.IOUint64 error_packets_total = 3;
+    fstmon.common.IOUint64 drop_packets_total = 4;
+
+    fstmon.common.IOUint64 bytes_per_sec = 5;
+    fstmon.common.IOUint64 packets_per_sec = 6;
+}
+
+message InterfacesIO {
+    map<string, InterfaceIO> interfaces = 1;
+}
+
+service NetworkService {
+    rpc GetInterfacesIO(GetInterfacesIORequest) returns (InterfacesIOResponse);
+}
+
+message GetInterfacesIORequest {}
+
+message InterfacesIOResponse {
+    InterfacesIO data = 1;
+}

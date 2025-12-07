@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package fstmon.system;
+
+import "google/protobuf/duration.proto";
+
+message SystemInfo {
+    google.protobuf.Duration uptime = 1;
+    google.protobuf.Duration idle = 2;
+
+    double load1 = 3;
+    double load5 = 4;
+    double load15 = 5;
+
+    int32 running_procs = 6;
+    int32 total_procs = 7;
+}
+
+service SystemService {
+    rpc GetSystemInfo(GetSystemInfoRequest) returns (SystemInfoResponse);
+}
+
+message GetSystemInfoRequest {}
+message SystemInfoResponse {
+    SystemInfo system = 1;
+}

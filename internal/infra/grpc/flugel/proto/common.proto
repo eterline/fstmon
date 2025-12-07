@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package fstmon.common;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// IO for uint64
+message IOUint64 {
+    uint64 summary = 1;
+    uint64 rx = 2;
+    uint64 tx = 3;
+}
+
+// IO for float64
+message IOFloat64 {
+    double summary = 1;
+    double rx = 2;
+    double tx = 3;
+}
+
+// IO for durations
+message IODuration {
+    google.protobuf.Duration summary = 1;
+    google.protobuf.Duration rx = 2;
+    google.protobuf.Duration tx = 3;
+}
