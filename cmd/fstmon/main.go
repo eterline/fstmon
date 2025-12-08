@@ -10,8 +10,8 @@ import (
 
 	"github.com/eterline/fstmon/internal/app"
 	"github.com/eterline/fstmon/internal/config"
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
+	"github.com/eterline/fstmon/internal/infra/security"
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
 

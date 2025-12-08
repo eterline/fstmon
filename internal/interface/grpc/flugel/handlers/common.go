@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/eterline/fstmon/internal/infra/grpc/flugel/common"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
+	pb "github.com/eterline/fstmon/internal/interface/grpc/flugel/common"
 	"google.golang.org/grpc"
 )
 

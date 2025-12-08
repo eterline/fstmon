@@ -7,7 +7,7 @@ import (
 	"net/netip"
 	"testing"
 
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
+	"github.com/eterline/fstmon/internal/infra/security"
 )
 
 func TestNewSubnetFilter_ValidAndInvalid(t *testing.T) {

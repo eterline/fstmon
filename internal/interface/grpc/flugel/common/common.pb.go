@@ -7,10 +7,11 @@
 package common
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -35,7 +36,7 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"GetThermal\x12\x1d.fstmon.dto.GetThermalRequest\x1a\x1b.fstmon.dto.ThermalResponse\x12Q\n" +
 	"\rGetPartitions\x12 .fstmon.dto.GetPartitionsRequest\x1a\x1e.fstmon.dto.PartitionsResponse\x12H\n" +
-	"\tGetDiskIO\x12\x1c.fstmon.dto.GetDiskIORequest\x1a\x1d.fstmon.dto.DiskIOMapResponseB>Z<github.com/eterline/fstmon/internal/infra/grpc/flugel/commonb\x06proto3"
+	"\tGetDiskIO\x12\x1c.fstmon.dto.GetDiskIORequest\x1a\x1d.fstmon.dto.DiskIOMapResponseB>Z<github.com/eterline/fstmon/internal/interface/grpc/flugel/commonb\x06proto3"
 
 var file_common_proto_goTypes = []any{
 	(*GetCpuInfoRequest)(nil),       // 0: fstmon.dto.GetCpuInfoRequest

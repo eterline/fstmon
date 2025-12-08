@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/infra/grpc/flugel/common"
+	"github.com/eterline/fstmon/internal/interface/grpc/flugel/common"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 

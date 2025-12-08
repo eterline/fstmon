@@ -7,12 +7,13 @@
 package common
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
@@ -2069,7 +2070,7 @@ const file_dto_proto_rawDesc = "" +
 	"partitions\x18\x01 \x01(\v2\x16.fstmon.dto.PartitionsR\n" +
 	"partitions\":\n" +
 	"\x11DiskIOMapResponse\x12%\n" +
-	"\x02io\x18\x01 \x01(\v2\x15.fstmon.dto.DiskIOMapR\x02ioB>Z<github.com/eterline/fstmon/internal/infra/grpc/flugel/commonb\x06proto3"
+	"\x02io\x18\x01 \x01(\v2\x15.fstmon.dto.DiskIOMapR\x02ioB>Z<github.com/eterline/fstmon/internal/interface/grpc/flugel/commonb\x06proto3"
 
 var (
 	file_dto_proto_rawDescOnce sync.Once

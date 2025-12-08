@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/infra/grpc/flugel/common"
-	"github.com/eterline/fstmon/internal/infra/grpc/flugel/convert"
+	"github.com/eterline/fstmon/internal/interface/grpc/flugel/common"
+	"github.com/eterline/fstmon/internal/interface/grpc/flugel/convert"
 )
 
 type machineInfohandlers struct {

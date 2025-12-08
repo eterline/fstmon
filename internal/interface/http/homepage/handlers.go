@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/infra/http/common/api"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
+	api "github.com/eterline/fstmon/internal/interface/http/common"
 )
 
 type ActualStateStore interface {

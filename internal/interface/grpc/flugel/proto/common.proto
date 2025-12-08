@@ -4,7 +4,7 @@ package fstmon.common;
 
 import "dto.proto";
 
-option go_package = "github.com/eterline/fstmon/internal/infra/grpc/flugel/common";
+option go_package = "github.com/eterline/fstmon/internal/interface/grpc/flugel/common";
 
 service MachineInfoService {
     rpc GetCpuInfo(dto.GetCpuInfoRequest) returns (dto.CpuPackageResponse);
