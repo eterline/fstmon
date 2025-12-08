@@ -40,6 +40,7 @@ var (
 	Flags = fstmon.InitFlags{
 		CommitHash: CommitHash,
 		Version:    Version,
+		Repository: "github.com/eterline/fstmon",
 	}
 
 	cfg = config.Configuration{

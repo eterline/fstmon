@@ -26,10 +26,18 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ========================================================
 
-	log.Info("starting app", "commit", flags.CommitHash, "version", flags.Version)
+	log.Info(
+		"starting app",
+		"commit", flags.GetCommitHash(),
+		"version", flags.GetVersion(),
+		"repository", flags.GetRepository(),
+	)
+
 	defer func() {
-		wt := root.WorkTime()
-		log.Info("exit from app", "running_time", wt)
+		log.Info(
+			"exit from app",
+			"running_time", root.WorkTime(),
+		)
 	}()
 
 	// ========================================================
