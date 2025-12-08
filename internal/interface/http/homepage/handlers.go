@@ -205,10 +205,10 @@ type versionGetter interface {
 
 type baseHandler struct {
 	vg        versionGetter
-	startedAt time.Time
+	startedAt func() time.Duration
 }
 
-func NewBaseHandler(v versionGetter, s time.Time) *baseHandler {
+func NewBaseHandler(v versionGetter, s func() time.Duration) *baseHandler {
 	return &baseHandler{
 		vg:        v,
 		startedAt: s,
@@ -232,8 +232,8 @@ type health struct {
 
 func (vh *baseHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 	h := health{
-		Uptime:    time.Since(vh.startedAt).String(),
-		UptimeSec: time.Since(vh.startedAt).Seconds(),
+		Uptime:    vh.startedAt().String(),
+		UptimeSec: vh.startedAt().Seconds(),
 	}
 
 	api.OkDataResponse(h).

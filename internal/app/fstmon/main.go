@@ -157,7 +157,7 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ========
 	{
-		base := httphomepage.NewBaseHandler(flags, root.Started())
+		base := httphomepage.NewBaseHandler(flags, root.WorkTime)
 		rootMux.Get("/version", base.HandleVersion)
 		rootMux.Get("/health", base.HandleHealth)
 	}
