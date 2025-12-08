@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/eterline/fstmon/internal/infra/security"
-	api "github.com/eterline/fstmon/internal/interface/http/common"
+	"github.com/eterline/fstmon/internal/interface/http/api"
 )
 
 func SecureHeaders(next http.Handler) http.Handler {

@@ -21,6 +21,7 @@ import (
 type AppStarter struct {
 	Context  context.Context
 	stopFunc context.CancelFunc
+	startAt  time.Time
 	wTimer   WorkTimerCallback
 	wg       sync.WaitGroup
 }
@@ -97,6 +98,10 @@ func (s *AppStarter) AddValue(key, value any) {
 	s.Context = context.WithValue(s.Context, key, value)
 }
 
+func (s *AppStarter) Started() time.Time {
+	return s.startAt
+}
+
 // UseContextAdders – uses func list that returns new context
 func (s *AppStarter) UseContextAdders(
 	addFunc ...func(context.Context) context.Context,
@@ -118,6 +123,8 @@ func InitAppStart(preInitFunc func() error) *AppStarter {
 // Must be used with pre init function. If their init will be errored – panic closes app
 func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *AppStarter {
 
+	start := time.Now()
+
 	if err := preInitFunc(); err != nil {
 		fmt.Printf("app starting fatal error: %v\n", err)
 		os.Exit(1)
@@ -135,6 +142,7 @@ func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *App
 		Context:  rootContext,
 		stopFunc: stopFunc,
 		wTimer:   WorkTimer(ctx),
+		startAt:  start,
 	}
 }
 

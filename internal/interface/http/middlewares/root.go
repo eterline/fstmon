@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/infra/log"
-	api "github.com/eterline/fstmon/internal/interface/http/common"
+	"github.com/eterline/fstmon/internal/interface/http/api"
 )
 
 // ================================================================================
