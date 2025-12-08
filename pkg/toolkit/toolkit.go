@@ -141,7 +141,7 @@ func InitAppStartWithContext(ctx context.Context, preInitFunc func() error) *App
 	return &AppStarter{
 		Context:  rootContext,
 		stopFunc: stopFunc,
-		wTimer:   WorkTimer(ctx),
+		wTimer:   WorkTimer(start),
 		startAt:  start,
 	}
 }
@@ -184,8 +184,7 @@ func ObjectUUID(object any) (uuid.UUID, bool) {
 
 type WorkTimerCallback func() time.Duration
 
-func WorkTimer(ctx context.Context) WorkTimerCallback {
-	start := time.Now()
+func WorkTimer(start time.Time) WorkTimerCallback {
 	return func() time.Duration {
 		return time.Since(start)
 	}
