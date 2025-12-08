@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 )
@@ -57,4 +58,22 @@ func ListCommands() []string {
 		names = append(names, k)
 	}
 	return names
+}
+
+func RunAdditional() (error, bool) {
+	args := os.Args[1:]
+	if len(args) == 0 {
+		return nil, false // no additional command
+	}
+
+	cmdName := args[0]
+	cmdArgs := args[1:]
+
+	// check if command is registered
+	err, ok := ExecuteCommand(cmdName, cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("failed to execute command '%s': %w", cmdName, err), false
+	}
+
+	return nil, ok
 }
