@@ -20,16 +20,19 @@ func ParseFloat[F Float](b []byte) (F, error) {
 		return 0, nil
 	}
 
-	var sign float64 = 1
-	var intPart float64 = 0
-	var fracPart float64 = 0
-	var fracDiv float64 = 1
-	i := 0
+	var (
+		sign     float64 = 1
+		intPart  float64 = 0
+		fracPart float64 = 0
+		fracDiv  float64 = 1
+		i                = 0
+	)
 
-	if b[i] == '-' {
+	switch b[i] {
+	case '-':
 		sign = -1
 		i++
-	} else if b[i] == '+' {
+	case '+':
 		i++
 	}
 

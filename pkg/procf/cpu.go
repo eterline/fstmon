@@ -86,7 +86,7 @@ func FetchCpuInfo() (ProcCpuInfo, error) {
 	}
 
 	dataSets = dataSets[:setsCount]
-	info.Cores = make([]CoreInfo, setsCount, setsCount)
+	info.Cores = make([]CoreInfo, setsCount)
 
 	for i, set := range dataSets {
 

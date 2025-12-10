@@ -20,10 +20,11 @@ func ParseInt[I Int](b []byte) (I, error) {
 	val := int64(0)
 	i := 0
 
-	if b[i] == '-' {
+	switch b[i] {
+	case '-':
 		sign = -1
 		i++
-	} else if b[i] == '+' {
+	case '+':
 		i++
 	}
 

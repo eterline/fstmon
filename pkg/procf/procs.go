@@ -52,7 +52,7 @@ func SysProcessList() ([]Process, error) {
 	var (
 		parts     = strings.Split(string(output), "\n")
 		procCount = len(parts) - 1
-		procArr   = make([]Process, procCount-1, procCount-1)
+		procArr   = make([]Process, procCount-1)
 	)
 
 	for i, part := range parts[1:] {

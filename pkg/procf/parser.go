@@ -178,10 +178,11 @@ func bytesToInt32(p []byte) int32 {
 	start := 0
 	negative := false
 
-	if p[0] == '-' {
+	switch p[0] {
+	case '-':
 		negative = true
 		start = 1
-	} else if p[0] == '+' {
+	case '+':
 		start = 1
 	}
 
@@ -220,10 +221,11 @@ func bytesToInt64(p []byte) int64 {
 	start := 0
 	negative := false
 
-	if p[0] == '-' {
+	switch p[0] {
+	case '-':
 		negative = true
 		start = 1
-	} else if p[0] == '+' {
+	case '+':
 		start = 1
 	}
 
@@ -300,7 +302,7 @@ func bytesToUint64(p []byte) uint64 {
 }
 
 func bytesToFloat32(p []byte) float32 {
-	v, err := strconv.ParseFloat(string(p), 10)
+	v, err := strconv.ParseFloat(string(p), 64)
 	if err != nil {
 		return errFloat32
 	}
@@ -308,7 +310,7 @@ func bytesToFloat32(p []byte) float32 {
 }
 
 func bytesToFloat64(p []byte) float64 {
-	v, err := strconv.ParseFloat(string(p), 10)
+	v, err := strconv.ParseFloat(string(p), 64)
 	if err != nil {
 		return errFloat64
 	}
