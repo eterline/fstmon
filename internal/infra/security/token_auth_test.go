@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
+	"github.com/eterline/fstmon/internal/infra/security"
 )
 
 const minLen = 64

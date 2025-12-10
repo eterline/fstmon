@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
 	"github.com/eterline/fstmon/internal/utils/usecase"
 )
 

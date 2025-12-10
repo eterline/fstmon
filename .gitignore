@@ -7,3 +7,5 @@
 /set_lic.sh
 /.tests
 /access*
+
+/cmd/testcase

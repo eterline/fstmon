@@ -92,7 +92,7 @@ type SystemInfo struct {
 	TotalProcs   int           `json:"total_procs"`   // total number of processes
 }
 
-// =======
+// ============================ Memory domain structures ============================
 
 /*
 MemoryMetric – system memory metrics.
@@ -112,7 +112,7 @@ type MemoryMetrics struct {
 	SwapUsedPercent float64 `json:"swap_used_percent"` // percentage of used swap
 }
 
-// =======
+// ============================ Thermal domain structures ============================
 
 /*
 ThermalMetric – an instantaneous thermal state of a sensor.

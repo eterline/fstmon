@@ -1,8 +1,4 @@
-// Copyright (c) 2025 EterLine (Andrew)
-// This file is part of fstmon.
-// Licensed under the MIT License. See the LICENSE file for details.
-
-package app
+package fstmon
 
 import (
 	"context"
@@ -10,24 +6,19 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/config"
-	"github.com/eterline/fstmon/internal/infra/http/common/api"
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
-	httphomepage "github.com/eterline/fstmon/internal/infra/http/homepage"
-	middleware "github.com/eterline/fstmon/internal/infra/http/middlewares"
-	"github.com/eterline/fstmon/internal/infra/http/server"
+	"github.com/eterline/fstmon/internal/infra/log"
 	metricstore "github.com/eterline/fstmon/internal/infra/metrics/metric_store"
 	"github.com/eterline/fstmon/internal/infra/metrics/system"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/security"
+	"github.com/eterline/fstmon/internal/interface/http/api"
+	httphomepage "github.com/eterline/fstmon/internal/interface/http/homepage"
+	middleware "github.com/eterline/fstmon/internal/interface/http/middlewares"
+	"github.com/eterline/fstmon/internal/interface/http/server"
 	"github.com/eterline/fstmon/internal/services/monitor"
 	"github.com/eterline/fstmon/pkg/toolkit"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/procfs"
 )
-
-type InitFlags struct {
-	CommitHash string
-	Version    string
-}
 
 func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration) {
 	ctx := root.Context
@@ -35,10 +26,18 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 
 	// ========================================================
 
-	log.Info("starting app", "commit", flags.CommitHash, "version", flags.Version)
+	log.Info(
+		"starting app",
+		"commit", flags.GetCommitHash(),
+		"version", flags.GetVersion(),
+		"repository", flags.GetRepository(),
+	)
+
 	defer func() {
-		wt := root.WorkTime()
-		log.Info("exit from app", "running_time", wt)
+		log.Info(
+			"exit from app",
+			"running_time", root.WorkTime(),
+		)
 	}()
 
 	// ========================================================
@@ -165,39 +164,45 @@ func Execute(root *toolkit.AppStarter, flags InitFlags, cfg config.Configuration
 	rootMux.Use(middleware.RequestLoggerWrap(log))
 
 	// ========
+	{
+		base := httphomepage.NewBaseHandler(flags, root.WorkTime)
+		rootMux.Get("/version", base.HandleVersion)
+		rootMux.Get("/health", base.HandleHealth)
+	}
+	// ========
+	{
+		metricRouter := chi.NewRouter()
 
-	metricRouter := chi.NewRouter()
-	h := httphomepage.New(metricPooling)
+		h := httphomepage.New(metricPooling)
+		metricRouter.Route("/homepage",
+			func(r chi.Router) {
+				r.Get("/system", h.HandleSystem)
+				r.Get("/cpu", h.HandleCpu)
+				r.Get("/memory", h.HandleMemory)
+				r.Get("/network", h.HandleNetwork)
+				r.Get("/partitions", h.HandlePartitions)
+				r.Get("/diskio", h.HandleDiskIO)
+			},
+		)
 
-	metricRouter.Route("/homepage",
-		func(r chi.Router) {
-			r.Get("/system", h.HandleSystem)
-			r.Get("/cpu", h.HandleCpu)
-			r.Get("/memory", h.HandleMemory)
-			r.Get("/network", h.HandleNetwork)
-			r.Get("/partitions", h.HandlePartitions)
-			r.Get("/diskio", h.HandleDiskIO)
-		},
-	)
-
-	rootMux.Mount("/metric", metricRouter)
-
+		rootMux.Mount("/metric", metricRouter)
+	}
 	// ============================
+	{
+		srv := server.NewServer(
+			rootMux,
+			server.WithTLS(server.NewServerTlsConfig()),
+			server.WithDisabledDefaultHttp2Map(),
+		)
 
-	srv := server.NewServer(
-		rootMux,
-		server.WithTLS(server.NewServerTlsConfig()),
-		server.WithDisabledDefaultHttp2Map(),
-	)
-
-	root.WrapWorker(func() {
-		err := srv.Run(ctx, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
-		if err != nil {
-			log.Error("server run error", "error", err)
-		}
-	})
-	defer srv.Close()
-
+		root.WrapWorker(func() {
+			err := srv.Run(ctx, cfg.Listen, cfg.KeyFileSSL, cfg.CrtFileSSL)
+			if err != nil {
+				log.Error("server run error", "error", err)
+			}
+		})
+		defer srv.Close()
+	}
 	// ============================
 	root.WaitWorkers(15 * time.Second)
 }

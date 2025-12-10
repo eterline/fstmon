@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/eterline/fstmon/internal/domain"
-	"github.com/eterline/fstmon/internal/infra/http/common/api"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
+	"github.com/eterline/fstmon/internal/interface/http/api"
 )
 
 type ActualStateStore interface {
@@ -195,4 +195,49 @@ func (hhg *HomepageHandlerGroup) HandleDiskIO(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		log.Error("response error", "error", err)
 	}
+}
+
+type versionGetter interface {
+	GetVersion() string
+	GetCommitHash() string
+	GetRepository() string
+}
+
+type baseHandler struct {
+	vg        versionGetter
+	startedAt func() time.Duration
+}
+
+func NewBaseHandler(v versionGetter, s func() time.Duration) *baseHandler {
+	return &baseHandler{
+		vg:        v,
+		startedAt: s,
+	}
+}
+
+func (vh *baseHandler) HandleVersion(w http.ResponseWriter, r *http.Request) {
+	info := map[string]string{
+		"version":    vh.vg.GetVersion(),
+		"commit":     vh.vg.GetCommitHash(),
+		"repository": vh.vg.GetRepository(),
+	}
+
+	api.OkDataResponse(info).Write(w)
+}
+
+type health struct {
+	Uptime    string  `json:"uptime"`
+	UptimeSec float64 `json:"uptime_sec"`
+}
+
+func (vh *baseHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
+	h := health{
+		Uptime:    vh.startedAt().String(),
+		UptimeSec: vh.startedAt().Seconds(),
+	}
+
+	api.OkDataResponse(h).
+		SetMessage("app is healthy").
+		SetCode(http.StatusOK).
+		Write(w)
 }

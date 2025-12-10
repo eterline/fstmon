@@ -1,6 +1,6 @@
 module github.com/eterline/fstmon
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/alexflint/go-arg v1.6.0
@@ -9,8 +9,10 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/prometheus/procfs v0.19.2
-	github.com/shirou/gopsutil/v4 v4.25.10
-	golang.org/x/sys v0.38.0
+	github.com/shirou/gopsutil/v4 v4.25.11
+	golang.org/x/sys v0.39.0
+	google.golang.org/grpc v1.77.0
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -41,5 +43,8 @@ require (
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

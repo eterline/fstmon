@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
+	"github.com/eterline/fstmon/internal/infra/security"
 )
 
 func TestInitAllowedHostsFilter(t *testing.T) {

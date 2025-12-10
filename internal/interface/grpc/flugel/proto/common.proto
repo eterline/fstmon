@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package fstmon.common;
+
+import "dto.proto";
+
+option go_package = "github.com/eterline/fstmon/internal/interface/grpc/flugel/common";
+
+service MachineInfoService {
+    rpc GetCpuInfo(dto.GetCpuInfoRequest) returns (dto.CpuPackageResponse);
+    rpc GetCpuMetrics(dto.GetCpuMetricsRequest) returns (dto.CpuMetricsResponse);
+
+    rpc GetInterfacesIO(dto.GetInterfacesIORequest) returns (dto.InterfacesIOResponse);
+
+    rpc GetSystemInfo(dto.GetSystemInfoRequest) returns (dto.SystemInfoResponse);
+
+    rpc GetMemoryMetrics(dto.GetMemoryMetricsRequest) returns (dto.MemoryMetricsResponse);
+
+    rpc GetThermal(dto.GetThermalRequest) returns (dto.ThermalResponse);
+
+    rpc GetPartitions(dto.GetPartitionsRequest) returns (dto.PartitionsResponse);
+    rpc GetDiskIO(dto.GetDiskIORequest) returns (dto.DiskIOMapResponse);
+}

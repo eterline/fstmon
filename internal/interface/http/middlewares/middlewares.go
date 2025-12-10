@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
 )
 
 func RequestLoggerWrap(logger *slog.Logger) func(http.Handler) http.Handler {

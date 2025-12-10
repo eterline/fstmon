@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eterline/fstmon/internal/app"
+	"github.com/eterline/fstmon/internal/app/fstmon"
 	"github.com/eterline/fstmon/internal/config"
-	"github.com/eterline/fstmon/internal/infra/http/common/security"
-	"github.com/eterline/fstmon/internal/log"
+	"github.com/eterline/fstmon/internal/infra/log"
+	"github.com/eterline/fstmon/internal/infra/security"
 	"github.com/eterline/fstmon/pkg/toolkit"
 )
 
@@ -37,9 +37,10 @@ var (
 )
 
 var (
-	Flags = app.InitFlags{
+	Flags = fstmon.InitFlags{
 		CommitHash: CommitHash,
 		Version:    Version,
+		Repository: "github.com/eterline/fstmon",
 	}
 
 	cfg = config.Configuration{
@@ -72,7 +73,7 @@ var (
 func main() {
 	root := toolkit.InitAppStart(
 		func() error {
-			err, ok := app.RunAdditional()
+			err, ok := toolkit.RunAdditional()
 			if err != nil {
 				return err
 			}
@@ -92,5 +93,5 @@ func main() {
 	logger := log.NewLogger(cfg.LogLevel, cfg.JSONlog)
 	root.Context = log.WrapLoggerToContext(root.Context, logger)
 
-	app.Execute(root, Flags, cfg)
+	fstmon.Execute(root, Flags, cfg)
 }
